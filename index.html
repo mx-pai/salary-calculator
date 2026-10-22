@@ -1043,7 +1043,7 @@
 
   <script>
     (() => {
-      const storageKey = "salary-ledger-v3";
+      const storageKey = "mx-pai-salary-calculator-v1";
       const example = {
         monthlySalary: 20000,
         salaryMonths: 13,
@@ -1339,7 +1339,7 @@
       }
 
       try {
-        const saved = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem("salary-ledger-v2") || "null");
+        const saved = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem("salary-ledger-v3") || localStorage.getItem("salary-ledger-v2") || "null");
         if (saved && typeof saved === "object") {
           for (const field of fields) {
             if (Object.prototype.hasOwnProperty.call(saved, field.dataset.key)) field.value = saved[field.dataset.key];
