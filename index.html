@@ -16,7 +16,7 @@
   <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、每月累计个税、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
   </script>
-  <link rel="stylesheet" href="styles.css?v=20261023steps1">
+  <link rel="stylesheet" href="styles.css?v=20261023paper-switch1">
 </head>
 <body>
   <main class="shell">
@@ -62,7 +62,7 @@
       </section>
 
       <aside class="result-panel" id="results" aria-label="薪酬计算结果">
-        <div class="preview-heading"><h2>计算结果</h2><div class="export-tools"><label class="visually-hidden" for="receipt-style">工资条风格</label><select id="receipt-style"><option value="paper">和纸小票</option><option value="thermal">热敏小票</option></select><button class="generate-button" id="generate-receipt" type="button" disabled>生成工资条</button></div></div>
+        <div class="preview-heading"><h2>计算结果</h2><div class="export-tools"><fieldset class="receipt-style-switch"><legend class="visually-hidden">工资条风格</legend><label><input class="visually-hidden" type="radio" name="receipt-style" value="paper" data-receipt-style checked><span>和纸小票</span></label><label><input class="visually-hidden" type="radio" name="receipt-style" value="thermal" data-receipt-style><span>热敏小票</span></label></fieldset><button class="generate-button" id="generate-receipt" type="button" disabled>生成工资条</button></div></div>
         <div class="view-tabs" role="tablist" aria-label="结果查看方式"><button type="button" id="tab-receipt" role="tab" data-result-view="receipt" aria-selected="true" aria-controls="receipt-view">全年概览</button><button type="button" id="tab-monthly" role="tab" data-result-view="monthly" aria-selected="false" aria-controls="monthly-view" tabindex="-1">每月到手</button></div>
         <div id="receipt-view" role="tabpanel" aria-labelledby="tab-receipt">
         <div class="receipt-stage">
@@ -216,9 +216,9 @@
     <div class="export-canvas" id="export-canvas" aria-busy="false"><img id="export-preview" alt="生成的薪酬估算工资条" role="button" tabindex="0" aria-label="放大工资条预览" aria-pressed="false"><p id="export-loading" role="status">正在生成工资条</p></div>
     <div class="export-footer"><span id="export-status" role="status" aria-live="polite"></span><div><button class="copy-button" id="copy-image" type="button" disabled>复制图片</button><button class="generate-button" id="download-image" type="button" disabled>保存图片</button></div></div>
   </dialog>
-  <script src="calculator.js?v=20261023steps1"></script>
-  <script src="report.js?v=20261023steps1"></script>
-  <script src="result-image.js?v=20261023steps1"></script>
-  <script src="app.js?v=20261023steps1"></script>
+  <script src="calculator.js?v=20261023paper-switch1"></script>
+  <script src="report.js?v=20261023paper-switch1"></script>
+  <script src="result-image.js?v=20261023paper-switch1"></script>
+  <script src="app.js?v=20261023paper-switch1"></script>
 </body>
 </html>

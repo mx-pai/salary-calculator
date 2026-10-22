@@ -210,7 +210,7 @@
   function setReceiptStyle(style) {
     receiptStyle = style === "thermal" ? "thermal" : "paper";
     $("#receipt-sheet").dataset.style = receiptStyle;
-    $("#receipt-style").value = receiptStyle;
+    document.querySelectorAll("[data-receipt-style]").forEach(input => { input.checked = input.value === receiptStyle; });
     try { localStorage.setItem("mx-pai-receipt-style", receiptStyle); } catch (_) { /* 当前页面仍可切换 */ }
   }
   async function refreshExport() {
@@ -301,7 +301,7 @@
       }
     }
   });
-  $("#receipt-style").addEventListener("change", event => setReceiptStyle(event.target.value));
+  document.querySelectorAll("[data-receipt-style]").forEach(input => input.addEventListener("change", () => setReceiptStyle(input.value)));
   $("#generate-receipt").addEventListener("click", openExport);
   function toggleImageZoom() {
     const zoomed = $("#export-canvas").classList.toggle("is-zoomed");
