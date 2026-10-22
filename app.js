@@ -123,6 +123,12 @@
     $("#generate-receipt").disabled = !value.canExport;
     renderErrors(value.errors);
     document.querySelectorAll("[data-quick-key]").forEach(button => button.setAttribute("aria-pressed", String(String(state[button.dataset.quickKey]).trim() !== "" && Number(state[button.dataset.quickKey]) === Number(button.dataset.quickValue))));
+    document.querySelectorAll("[data-step-key]").forEach(button => {
+      const field = fieldsByKey.get(button.dataset.stepKey), delta = Number(button.dataset.stepValue);
+      const current = Number.isFinite(field.valueAsNumber) ? field.valueAsNumber : 0;
+      const min = field.min === "" ? -Infinity : Number(field.min), max = field.max === "" ? Infinity : Number(field.max);
+      button.disabled = field.disabled || (delta < 0 ? current <= min : current >= max);
+    });
     $("#bonus-quick-picks").hidden = mode !== "months";
     renderPayroll(value.payroll);
     clearTimeout(announceTimer);
@@ -269,6 +275,13 @@
   document.querySelectorAll("[data-edit-tax]").forEach(button => button.addEventListener("click", editTax));
   document.querySelectorAll("[data-quick-key]").forEach(button => button.addEventListener("click", () => {
     fieldsByKey.get(button.dataset.quickKey).value = button.dataset.quickValue; update();
+  }));
+  document.querySelectorAll("[data-step-key]").forEach(button => button.addEventListener("click", () => {
+    const field = fieldsByKey.get(button.dataset.stepKey);
+    const current = Number.isFinite(field.valueAsNumber) ? field.valueAsNumber : 0;
+    const min = field.min === "" ? -Infinity : Number(field.min), max = field.max === "" ? Infinity : Number(field.max);
+    field.value = Math.min(max, Math.max(min, Number((current + Number(button.dataset.stepValue)).toPrecision(12))));
+    update();
   }));
   document.querySelectorAll("[data-result-view]").forEach(button => {
     button.addEventListener("click", () => showResultView(button.dataset.resultView));
