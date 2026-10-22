@@ -105,8 +105,9 @@
       cursor: pointer;
       font-size: 13px;
       font-weight: var(--w-title);
-      transition: border-color .16s ease, background-color .16s ease;
+      transition: border-color .16s ease, background-color .16s ease, transform .08s ease;
     }
+    .text-button:active, .copy-button:active { transform: translateY(1px); }
     .text-button:hover, .copy-button:hover { border-color: var(--border-strong); background: var(--hover-bg); }
     .text-button#reset-button { border-color: var(--cash); background: var(--cash); color: var(--paper); }
     .text-button#reset-button:hover { border-color: var(--cash-dark); background: var(--cash-dark); }
@@ -171,6 +172,16 @@
     .total.net-total.is-pending { color: var(--hero-soft); font-size: 23px; font-weight: var(--w-label); }
     .total-caption { min-height: 34px; margin-top: 7px; color: var(--hero-soft); font-size: 12px; line-height: 1.55; }
     .net-secondary { margin: 6px 0 0; color: var(--hero-soft); font-size: 12px; font-variant-numeric: tabular-nums; }
+    /* 主数字每次按键都变，不能是 live region：读屏会跟着敲键一路复读。
+       改由这个隐藏节点在停止输入后播报一次 */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
     .result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
     .copy-button { border-color: var(--hero-border); background: transparent; color: var(--hero-ink); }
     .copy-button:hover { border-color: var(--hero-border-hover); background: var(--hero-raised); }
@@ -189,6 +200,7 @@
     .splitbar { display: flex; width: 100%; height: 8px; margin: 9px 0 18px; overflow: hidden; border-radius: 1px; background: var(--line-soft); }
     .splitbar .cash-fill { background: var(--cash); }
     .splitbar .equity-fill { background: var(--equity); }
+    .splitbar .cash-fill, .splitbar .equity-fill { transition: width .18s ease; }
     .breakdown { display: grid; gap: 0; }
     /* 单据行：项目名与金额之间用点线引导线拉通，行与行之间不再画实线。
        dotted 的点距由浏览器决定（规范未定义），所以只把它当视觉语言，不做像素级对齐，
@@ -275,6 +287,18 @@
       .scenario { padding-right: 4px; }
       .footer { flex-direction: column; gap: 4px; }
       .footer span:last-child { white-space: normal; }
+    }
+
+    /* 放在样式表末尾：同特异性时后者胜出，不需要 !important。
+       减弱而不是全删——保留颜色过渡，去掉位移 */
+    @media (prefers-reduced-motion: reduce) {
+      .text-button,
+      .copy-button,
+      .entry,
+      .splitbar .cash-fill,
+      .splitbar .equity-fill { transition: none; }
+      .text-button:active,
+      .copy-button:active { transform: none; }
     }
   </style>
 </head>
@@ -433,15 +457,16 @@
           <div class="result-hero">
             <div class="result-label"><h2>薪酬估算单</h2><span class="example-tag" id="example-tag">待填写</span></div>
             <div class="net-label">税后月均到手</div>
-            <div class="total net-total" id="monthly-net" aria-live="polite">待填写月薪</div>
+            <div class="total net-total" id="monthly-net">待填写月薪</div>
             <p class="net-secondary" id="monthly-with-bonus" hidden></p>
             <p class="total-caption" id="result-caption">填写税前月薪后开始估算</p>
             <div class="result-actions">
               <button class="copy-button" id="copy-results" type="button">复制估算结果</button>
               <button class="copy-button" id="copy-image" type="button">复制图片</button>
               <button class="copy-button" id="download-image" type="button">下载 PNG</button>
-              <span id="action-status" role="status" aria-live="polite"></span>
+              <span id="action-status" role="status" aria-live="polite" aria-atomic="true"></span>
             </div>
+            <p class="visually-hidden" id="result-announcer" role="status" aria-live="polite" aria-atomic="true"></p>
           </div>
           <label class="assumption-option" for="use-default-tax">
             <input id="use-default-tax" data-key="useDefaultTax" type="checkbox">
@@ -451,7 +476,7 @@
             <div><span>税后年现金</span><strong id="steady-net">—</strong></div>
             <div><span>年化税前总包</span><strong id="annual-total">—</strong></div>
           </div>
-          <div class="mix-heading"><span>年度收入组成</span><span>现金 · 股权估值</span></div>
+          <div class="mix-heading"><span>年度收入组成</span><span>现金与股权估值</span></div>
           <div class="splitbar" aria-label="现金与股权构成比例">
             <span class="cash-fill" id="cash-fill"></span>
             <span class="equity-fill" id="equity-fill"></span>
@@ -459,7 +484,7 @@
           <div class="breakdown">
             <div class="breakdown-row"><span>稳态年度现金收入</span><i class="leader" aria-hidden="true"></i><strong id="cash-total">—</strong></div>
             <div class="breakdown-row"><span>年均股权归属估值</span><i class="leader" aria-hidden="true"></i><strong id="equity-total">—</strong></div>
-            <div class="breakdown-row"><span>年度个税估算 · <span id="bonus-tax-result">待设置</span></span><i class="leader" aria-hidden="true"></i><strong id="annual-tax">—</strong></div>
+            <div class="breakdown-row"><span>年度个税估算<span id="bonus-tax-result">待设置</span></span><i class="leader" aria-hidden="true"></i><strong id="annual-tax">—</strong></div>
             <div class="breakdown-row"><span>个人社保与公积金</span><i class="leader" aria-hidden="true"></i><strong id="annual-contribution">—</strong></div>
           </div>
           <div class="result-divider"></div>
@@ -482,7 +507,7 @@
             </div>
           </section>
           <div class="scenario-box">
-            <div class="scenario-head"><h2 id="scenario-title">股权估值情景</h2><span>年化总包 · 税前</span></div>
+            <div class="scenario-head"><h2 id="scenario-title">股权估值情景</h2><span>年化税前总包</span></div>
             <div class="scenario-list" id="scenario-list"></div>
             <div class="tax-breakdown"><div class="breakdown-row"><span class="swatch equity"></span><span>首年预计行权资金</span><i class="leader" aria-hidden="true"></i><strong id="exercise-cost">—</strong></div></div>
           </div>
@@ -579,6 +604,14 @@
         window.clearTimeout(statusTimer);
         status.textContent = message;
         if (message) statusTimer = window.setTimeout(() => { status.textContent = ""; }, 2400);
+      }
+
+      // 主数字不再是 live region，改由这里在停止输入后播报一次
+      let announceTimer = 0;
+      function announceResult(message) {
+        const node = document.querySelector("#result-announcer");
+        window.clearTimeout(announceTimer);
+        announceTimer = window.setTimeout(() => { node.textContent = message; }, 700);
       }
 
       function progressiveTax(taxableIncome) {
@@ -728,9 +761,12 @@
             : "经常性月度到手：固定薪酬摊入月均，不含年终奖与期权";
         document.querySelector("#exercise-cost").textContent = money(exerciseCash);
         const modeLabel = taxMode === "auto"
-          ? `自动比较 · ${steadyYear.selectedTaxMode === "separate" ? "单独计税" : "并入综合所得"}`
-          : taxMode === "separate" ? "单独计税" : "并入综合所得";
+          ? `（自动比较：${steadyYear.selectedTaxMode === "separate" ? "单独计税" : "并入综合所得"}）`
+          : taxMode === "separate" ? "（单独计税）" : "（并入综合所得）";
         document.querySelector("#bonus-tax-result").textContent = canEstimateNet ? modeLabel : "待设置";
+        announceResult(canEstimateNet
+          ? `税后月均到手 ${money(averageMonthlyNet)}，税后年现金 ${money(steadyYear.netCash)}`
+          : "");
         document.querySelector("#cash-fill").style.width = `${cashShare}%`;
         document.querySelector("#equity-fill").style.width = `${equityShare}%`;
 
@@ -773,7 +809,7 @@
           const item = document.createElement("div");
           item.className = "scenario";
           const name = document.createElement("span");
-          name.textContent = `${label} · ${money(price)}/份`;
+          name.textContent = `${label} ${money(price)}/份`;
           const total = document.createElement("strong");
           total.textContent = money(steadyCash + equityUnits * Math.max(price - strikePrice, 0) / vestingYears);
           item.append(name, total);
@@ -980,7 +1016,7 @@
         text(read("annual-total"), 630, 368 + headerExtra, { size: 23, weight: 600, color: palette.greenInk });
 
         text("年度收入组成", contentLeft, headingY, { size: 16, weight: 650 });
-        text("现金 · 股权估值", contentRight, headingY, { size: 12, color: palette.muted, align: "right" });
+        text("现金与股权估值", contentRight, headingY, { size: 12, color: palette.muted, align: "right" });
         const cashShare = Math.max(0, Math.min(100, Number.parseFloat(document.querySelector("#cash-fill").style.width) || 0));
         const equityShare = Math.max(0, Math.min(100 - cashShare, Number.parseFloat(document.querySelector("#equity-fill").style.width) || 0));
         roundedRect(contentLeft, barY, barWidth, 8, 1, palette.softLine);
@@ -992,7 +1028,7 @@
         const rows = [
           ["稳态年度现金收入", read("cash-total")],
           ["年均股权归属估值", read("equity-total")],
-          [`年度个税估算 · ${read("bonus-tax-result")}`, read("annual-tax")],
+          [`年度个税估算${read("bonus-tax-result")}`, read("annual-tax")],
           ["个人社保与公积金", read("annual-contribution")]
         ];
         rows.forEach(([label, value], index) => {
