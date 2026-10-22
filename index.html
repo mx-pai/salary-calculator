@@ -63,6 +63,8 @@
     .text-button:hover, .copy-button:hover { border-color: #8fa7ad; background: #f8fbfb; }
     .text-button#reset-button { border-color: var(--cash); background: var(--cash); color: #fff; }
     .text-button#reset-button:hover { border-color: #126c65; background: #126c65; }
+    .text-button#clear-button.is-confirming { border-color: #c0654c; background: #fdf3f0; color: #a8432c; }
+    .text-button#clear-button.is-confirming:hover { border-color: #a8432c; background: #fbe9e3; }
     .text-button:focus-visible, .copy-button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
       outline: 3px solid #73a8d4;
       outline-offset: 2px;
@@ -115,16 +117,16 @@
 
     .result-panel { position: sticky; top: 18px; overflow: hidden; border-color: #cbd9d3; background: #f8f8f2; }
     .result-top { padding: 0 27px 22px; }
-    .result-hero { position: relative; margin: 0 -27px; padding: 25px 27px 24px; overflow: hidden; border-bottom: 2px solid #b99258; background: #103e32; color: #f2f3e9; }
-    .result-label { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+    .result-hero { position: relative; margin: 0 -27px; padding: 24px 27px 25px; overflow: hidden; border-bottom: 2px solid #b99258; background: #103e32; color: #f2f3e9; }
+    .result-label { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
     .result-label h2 { font-size: 17px; font-weight: 650; }
-    .example-tag { padding: 4px 8px; border: 1px solid #557669; color: #d5e1da; font-size: 11px; }
-    .assumption-option { display: flex; align-items: flex-start; gap: 11px; margin-top: 18px; padding: 12px 13px; border: 1px solid #45675c; border-radius: 3px; background: #194b3d; color: #f2f3e9; cursor: pointer; }
-    .assumption-option input { width: 17px; height: 17px; flex: 0 0 17px; margin: 2px 0 0; accent-color: #d8e794; }
+    .example-tag { padding: 3px 9px; border: 1px solid rgba(216, 231, 148, .34); border-radius: 4px; background: rgba(216, 231, 148, .14); color: #dbe8ab; font-size: 11px; }
+    .assumption-option { display: flex; align-items: flex-start; gap: 11px; margin-top: 15px; padding: 13px 15px; border: 1px solid #d6dfd9; border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+    .assumption-option input { width: 17px; height: 17px; flex: 0 0 17px; margin: 2px 0 0; accent-color: var(--cash); }
     .assumption-option strong, .assumption-option small { display: block; }
     .assumption-option strong { font-size: 13px; font-weight: 630; }
-    .assumption-option small { margin-top: 4px; color: #c3d3ca; font-size: 11px; line-height: 1.5; }
-    .net-label { margin-top: 21px; color: #c3d3ca; font-size: 13px; }
+    .assumption-option small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .net-label { margin-top: 22px; color: #c3d3ca; font-size: 13px; }
     .total { margin-top: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .total.net-total { color: #d8e794; font-size: clamp(39px, 4vw, 49px); font-weight: 700; line-height: 1.17; }
     .total.net-total.is-pending { color: #c3d3ca; font-size: 23px; font-weight: 560; }
@@ -132,11 +134,11 @@
     .result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
     .copy-button { border-color: #7c9b8d; background: transparent; color: #f2f3e9; }
     .copy-button:hover { border-color: #c4d8ca; background: #194b3d; }
-    #export-image { border-color: #d8e794; background: #d8e794; color: #173d32; }
-    #export-image:hover { border-color: #e4f0b2; background: #e4f0b2; }
-    #copy-status, #export-status { color: #c3d3ca; font-size: 11px; }
+    #copy-image { border-color: #d8e794; background: #d8e794; color: #173d32; }
+    #copy-image:hover { border-color: #e4f0b2; background: #e4f0b2; }
+    #action-status { color: #c3d3ca; font-size: 11px; }
 
-    .result-kpis { display: grid; grid-template-columns: 1fr 1fr; margin-top: 0; border-bottom: 1px solid #d6dfd9; }
+    .result-kpis { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; border-bottom: 1px solid #d6dfd9; }
     .result-kpis > div { padding: 14px 14px 14px 0; }
     .result-kpis > div + div { padding-left: 17px; border-left: 1px solid var(--line); }
     .result-kpis span { display: block; color: var(--muted); font-size: 11px; }
@@ -372,20 +374,20 @@
         <div class="result-top">
           <div class="result-hero">
             <div class="result-label"><h2>薪酬估算单</h2><span class="example-tag" id="example-tag">待填写</span></div>
-            <label class="assumption-option" for="use-default-tax">
-              <input id="use-default-tax" data-key="useDefaultTax" type="checkbox">
-              <span><strong>按常见缴费参数估算</strong><small>空白按月薪作基数、社保 10.5%、公积金 7%，专项扣除按 0 元；可逐项修改</small></span>
-            </label>
             <div class="net-label">税后月均到手</div>
-            <div class="total net-total" id="monthly-net" aria-live="polite">先填月薪</div>
-            <p class="total-caption" id="result-caption">选择缴费估算方式后显示税后金额</p>
+            <div class="total net-total" id="monthly-net" aria-live="polite">待填写月薪</div>
+            <p class="total-caption" id="result-caption">填写税前月薪后开始估算</p>
             <div class="result-actions">
               <button class="copy-button" id="copy-results" type="button">复制估算结果</button>
-              <button class="copy-button" id="export-image" type="button">导出 PNG</button>
-              <span id="copy-status" role="status" aria-live="polite"></span>
-              <span id="export-status" role="status" aria-live="polite"></span>
+              <button class="copy-button" id="copy-image" type="button">复制图片</button>
+              <button class="copy-button" id="download-image" type="button">下载 PNG</button>
+              <span id="action-status" role="status" aria-live="polite"></span>
             </div>
           </div>
+          <label class="assumption-option" for="use-default-tax">
+            <input id="use-default-tax" data-key="useDefaultTax" type="checkbox">
+            <span><strong>按常见缴费参数估算</strong><small>空白按月薪作基数、社保 10.5%、公积金 7%，专项扣除按 0 元；可逐项修改</small></span>
+          </label>
           <div class="result-kpis">
             <div><span>税后年现金</span><strong id="steady-net">—</strong></div>
             <div><span>年化税前总包</span><strong id="annual-total">—</strong></div>
@@ -513,6 +515,14 @@
       const money = (value) => yuan.format(Math.round(value || 0));
       const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 
+      let statusTimer = 0;
+      function setStatus(message) {
+        const status = document.querySelector("#action-status");
+        window.clearTimeout(statusTimer);
+        status.textContent = message;
+        if (message) statusTimer = window.setTimeout(() => { status.textContent = ""; }, 2400);
+      }
+
       function progressiveTax(taxableIncome) {
         const brackets = [
           { limit: 36000, rate: 0.03, deduction: 0 },
@@ -589,6 +599,7 @@
         const reserve = number("signOnReserve");
         const hasSalary = monthly > 0;
         const hasAnyCompensation = hasSalary || number("equityUnits") > 0;
+        const hasEquity = number("equityUnits") > 0 && fieldFor("shareBase").value.trim() !== "";
         const contributionKeys = ["socialBase", "socialRate", "housingBase", "housingRate"];
         const customContributionsComplete = contributionKeys.every((key) => fieldFor(key).value.trim() !== "");
         const useDefaultTax = fieldFor("useDefaultTax").checked;
@@ -633,19 +644,19 @@
 
         document.querySelector("#annual-total").textContent = hasAnyCompensation ? money(annualized) : "—";
         document.querySelector("#cash-total").textContent = hasSalary ? money(steadyCash) : "—";
-        document.querySelector("#equity-total").textContent = money(annualEquity);
+        document.querySelector("#equity-total").textContent = hasEquity ? money(annualEquity) : "—";
         document.querySelector("#first-year-total").textContent = hasAnyCompensation ? money(firstYear) : "—";
         const monthlyNet = document.querySelector("#monthly-net");
-        monthlyNet.textContent = canEstimateNet ? money(averageMonthlyNet) : hasSalary ? "待设置缴费参数" : "等待输入";
+        monthlyNet.textContent = canEstimateNet ? money(averageMonthlyNet) : hasSalary ? "待设置缴费参数" : "待填写月薪";
         monthlyNet.classList.toggle("is-pending", !canEstimateNet);
         document.querySelector("#steady-net").textContent = canEstimateNet ? money(steadyYear.netCash) : "—";
         document.querySelector("#first-year-net").textContent = canEstimateNet ? money(years[0].netCash) : "—";
         document.querySelector("#annual-tax").textContent = canEstimateNet ? money(steadyYear.tax) : "—";
         document.querySelector("#annual-contribution").textContent = canEstimateNet ? money(contributionPerMonth * 12) : "—";
         document.querySelector("#result-caption").textContent = !hasSalary
-          ? "输入税前月薪后显示结果"
+          ? "填写税前月薪后开始估算"
           : !canEstimateNet
-            ? "当前显示税前收入；按常见参数估算，或补全四项缴费参数后显示税后金额"
+            ? "填写社保与公积金参数，或勾选「按常见缴费参数估算」"
             : "税后年现金平均到每月，年终奖和期权不计入月均";
         document.querySelector("#exercise-cost").textContent = money(exerciseCash);
         const modeLabel = taxMode === "auto"
@@ -716,15 +727,14 @@
       }
 
       async function copyResults() {
-        const status = document.querySelector("#copy-status");
         if (number("monthlySalary") <= 0) {
-          status.textContent = "先填税前月薪";
+          setStatus("先填写税前月薪");
           return;
         }
         const taxFields = ["socialBase", "socialRate", "housingBase", "housingRate"];
         const taxReady = fieldFor("useDefaultTax").checked || taxFields.every((key) => fieldFor(key).value.trim() !== "");
         if (!taxReady) {
-          status.textContent = "先选择估算方式或补全缴费参数";
+          setStatus("先勾选常见参数估算，或补全缴费参数");
           return;
         }
         const taxBasis = fieldFor("useDefaultTax").checked
@@ -742,7 +752,7 @@
         try {
           if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
           await navigator.clipboard.writeText(result);
-          status.textContent = "已复制";
+          setStatus("结果已复制");
         } catch (_) {
           const buffer = document.createElement("textarea");
           buffer.value = result;
@@ -754,31 +764,43 @@
           let copied = false;
           try { copied = document.execCommand("copy"); } catch (_) { copied = false; }
           buffer.remove();
-          status.textContent = copied ? "已复制" : "复制失败，请手动记录";
+          setStatus(copied ? "结果已复制" : "复制失败，请手动记录");
         }
-        window.setTimeout(() => { status.textContent = ""; }, 2400);
       }
 
-      function exportResultsImage() {
-        const status = document.querySelector("#export-status");
+      function buildResultCanvas() {
         const hasSalary = number("monthlySalary") > 0;
-        const hasEquity = number("equityUnits") > 0;
-        if (!hasSalary && !hasEquity) {
-          status.textContent = "先填写月薪或期权份数";
-          return;
-        }
+        const hasEquityUnits = number("equityUnits") > 0;
+        if (!hasSalary && !hasEquityUnits) return null;
+
+        const width = 1200;
+        const scale = 2;
+        const top = 36;
+        const left = 40;
+        const cardWidth = 1120;
+        const headerHeight = 360;
+        const contentLeft = left + 40;
+        const contentRight = left + cardWidth - 40;
+        const barWidth = contentRight - contentLeft;
+        const contentTop = top + headerHeight;
+        const headingY = contentTop + 47;
+        const barY = headingY + 18;
+        const rowsStartY = barY + 53;
+        const rowGap = 45;
+        const dividerY = rowsStartY + 3 * rowGap + 38;
+        const footFirstY = dividerY + 41;
+        const footSecondY = dividerY + 85;
+        const ruleY = dividerY + 112;
+        const noteFirstY = ruleY + 36;
+        const noteSecondY = noteFirstY + 25;
+        const cardHeight = noteSecondY + 44 - top;
+        const height = top + cardHeight + 36;
 
         const canvas = document.createElement("canvas");
-        const width = 1200;
-        const height = 1000;
-        const scale = 2;
         canvas.width = width * scale;
         canvas.height = height * scale;
         const context = canvas.getContext("2d");
-        if (!context) {
-          status.textContent = "图片生成失败，请重试";
-          return;
-        }
+        if (!context) return null;
         context.scale(scale, scale);
 
         const palette = {
@@ -823,12 +845,6 @@
         const taxReady = fieldFor("useDefaultTax").checked
           || ["socialBase", "socialRate", "housingBase", "housingRate"].every((key) => fieldFor(key).value.trim() !== "");
         const netReady = hasSalary && taxReady;
-        const tag = read("example-tag");
-        const top = 36;
-        const left = 40;
-        const cardWidth = 1120;
-        const cardHeight = 928;
-        const headerHeight = 360;
 
         context.fillStyle = palette.page;
         context.fillRect(0, 0, width, height);
@@ -851,31 +867,32 @@
         context.fillStyle = palette.equity;
         context.fillRect(left, top + headerHeight - 2, cardWidth, 2);
 
-        text("薪资计算器", 80, 84, { size: 19, weight: 650, color: "#f2f3e9" });
-        text(tag, 1120, 84, { size: 14, color: "#d5e1da", align: "right" });
-        line(80, 112, 1120, 112, "#45675c");
-        text("税后月均到手", 80, 160, { size: 16, color: palette.greenSoft });
-        text(netReady ? read("monthly-net") : hasSalary ? "待设置缴费参数" : "待填写月薪", 80, 238, {
+        text("薪资计算器", contentLeft, 84, { size: 19, weight: 650, color: "#f2f3e9" });
+        text(read("example-tag"), contentRight, 84, { size: 14, color: "#d5e1da", align: "right" });
+        line(contentLeft, 112, contentRight, 112, "#45675c");
+        text("税后月均到手", contentLeft, 160, { size: 16, color: palette.greenSoft });
+        text(read("monthly-net"), contentLeft, 238, {
           size: netReady ? 59 : 30,
           weight: 700,
           color: netReady ? palette.lime : palette.greenSoft
         });
-        text(read("result-caption"), 80, 275, { size: 14, color: palette.greenSoft });
-        line(80, 304, 1120, 304, "#45675c");
+        text(read("result-caption"), contentLeft, 275, { size: 14, color: palette.greenSoft });
+        line(contentLeft, 304, contentRight, 304, "#45675c");
         line(600, 322, 600, 374, "#45675c");
-        text("税后年现金", 80, 337, { size: 13, color: palette.greenSoft });
-        text(read("steady-net"), 80, 368, { size: 23, weight: 650, color: "#f2f3e9" });
+        text("税后年现金", contentLeft, 337, { size: 13, color: palette.greenSoft });
+        text(read("steady-net"), contentLeft, 368, { size: 23, weight: 650, color: "#f2f3e9" });
         text("年化税前总包", 630, 337, { size: 13, color: palette.greenSoft });
         text(read("annual-total"), 630, 368, { size: 23, weight: 650, color: "#f2f3e9" });
 
-        text("年度收入组成", 80, 443, { size: 16, weight: 650 });
+        text("年度收入组成", contentLeft, headingY, { size: 16, weight: 650 });
+        text("现金 · 股权估值", contentRight, headingY, { size: 12, color: palette.muted, align: "right" });
         const cashShare = Math.max(0, Math.min(100, Number.parseFloat(document.querySelector("#cash-fill").style.width) || 0));
         const equityShare = Math.max(0, Math.min(100 - cashShare, Number.parseFloat(document.querySelector("#equity-fill").style.width) || 0));
-        roundedRect(80, 461, 1040, 8, 1, "#e2e9e5");
+        roundedRect(contentLeft, barY, barWidth, 8, 1, "#e2e9e5");
         context.fillStyle = palette.cash;
-        context.fillRect(80, 461, 1040 * cashShare / 100, 8);
+        context.fillRect(contentLeft, barY, barWidth * cashShare / 100, 8);
         context.fillStyle = palette.equity;
-        context.fillRect(80 + 1040 * cashShare / 100, 461, 1040 * equityShare / 100, 8);
+        context.fillRect(contentLeft + barWidth * cashShare / 100, barY, barWidth * equityShare / 100, 8);
 
         const rows = [
           ["稳态年度现金收入", read("cash-total")],
@@ -884,17 +901,17 @@
           ["个人社保与公积金", read("annual-contribution")]
         ];
         rows.forEach(([label, value], index) => {
-          const y = 514 + index * 45;
-          text(label, 80, y, { size: 14, color: palette.muted });
-          text(value, 1120, y, { size: 15, weight: 600, align: "right" });
-          if (index < rows.length - 1) line(80, y + 16, 1120, y + 16, "#e9eeea");
+          const y = rowsStartY + index * rowGap;
+          text(label, contentLeft, y, { size: 14, color: palette.muted });
+          text(value, contentRight, y, { size: 15, weight: 600, align: "right" });
+          if (index < rows.length - 1) line(contentLeft, y + 16, contentRight, y + 16, "#e9eeea");
         });
-        line(80, 710, 1120, 710, "#cbd9d3");
-        text("首年税后可支配现金", 80, 751, { size: 14, color: palette.muted });
-        text(read("first-year-net"), 1120, 751, { size: 16, weight: 650, color: palette.cash, align: "right" });
-        text("首年税前总包，含股权估值", 80, 795, { size: 14, color: palette.muted });
-        text(read("first-year-total"), 1120, 795, { size: 16, weight: 650, align: "right" });
-        line(80, 822, 1120, 822, palette.line);
+        line(contentLeft, dividerY, contentRight, dividerY, "#cbd9d3");
+        text("首年税后可支配现金", contentLeft, footFirstY, { size: 14, color: palette.muted });
+        text(read("first-year-net"), contentRight, footFirstY, { size: 16, weight: 650, color: palette.cash, align: "right" });
+        text("首年税前总包，含股权估值", contentLeft, footSecondY, { size: 14, color: palette.muted });
+        text(read("first-year-total"), contentRight, footSecondY, { size: 16, weight: 650, align: "right" });
+        line(contentLeft, ruleY, contentRight, ruleY, palette.line);
 
         const monthlySalary = number("monthlySalary");
         const socialBase = number("socialBase", fieldFor("useDefaultTax").checked ? monthlySalary : 0);
@@ -904,31 +921,95 @@
         const taxBasis = !taxReady
           ? "税后金额待缴费参数设置"
           : `缴费估算：社保 ${money(socialBase)} × ${socialRate}%，公积金 ${money(housingBase)} × ${housingRate}%`;
-        text(taxBasis, 80, 858, { size: 12, color: palette.muted });
-        text("期权估值未计流动性折价及离职失效条款", 80, 883, { size: 12, color: palette.muted });
+        text(taxBasis, contentLeft, noteFirstY, { size: 12, color: palette.muted });
+        text("期权估值未计流动性折价及离职失效条款", contentLeft, noteSecondY, { size: 12, color: palette.muted });
 
-        canvas.toBlob((blob) => {
+        return canvas;
+      }
+
+      const canvasToBlob = (canvas) => new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+
+      function saveImageFile(blob) {
+        const url = URL.createObjectURL(blob);
+        const download = document.createElement("a");
+        download.href = url;
+        const now = new Date();
+        const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+        download.download = `薪资估算-${date}.png`;
+        download.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      async function copyResultImage() {
+        const canvas = buildResultCanvas();
+        if (!canvas) {
+          setStatus("先填写月薪或期权份数");
+          return;
+        }
+        const blobPromise = canvasToBlob(canvas);
+        if (!navigator.clipboard?.write || !window.ClipboardItem) {
+          const blob = await blobPromise;
           if (!blob) {
-            status.textContent = "图片生成失败，请重试";
+            setStatus("图片生成失败，请重试");
             return;
           }
-          const url = URL.createObjectURL(blob);
-          const download = document.createElement("a");
-          download.href = url;
-          const now = new Date();
-          const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
-          download.download = `薪资估算-${date}.png`;
-          download.click();
-          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-          status.textContent = "PNG 已下载";
-          window.setTimeout(() => { status.textContent = ""; }, 2400);
-        }, "image/png");
+          saveImageFile(blob);
+          setStatus("当前环境不支持复制图片，已改为下载 PNG");
+          return;
+        }
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+          setStatus("图片已复制，可直接粘贴");
+        } catch (_) {
+          const blob = await blobPromise;
+          if (!blob) {
+            setStatus("图片生成失败，请重试");
+            return;
+          }
+          saveImageFile(blob);
+          setStatus("复制图片失败，已改为下载 PNG");
+        }
+      }
+
+      async function downloadResultImage() {
+        const canvas = buildResultCanvas();
+        if (!canvas) {
+          setStatus("先填写月薪或期权份数");
+          return;
+        }
+        const blob = await canvasToBlob(canvas);
+        if (!blob) {
+          setStatus("图片生成失败，请重试");
+          return;
+        }
+        saveImageFile(blob);
+        setStatus("PNG 已下载");
       }
 
       function clearForm() {
         for (const field of fields) writeField(field, empty[field.dataset.key]);
         document.querySelectorAll("details.advanced").forEach((detail) => { detail.open = false; });
         update();
+      }
+
+      let clearTimer = 0;
+      function resetClearButton() {
+        window.clearTimeout(clearTimer);
+        const button = document.querySelector("#clear-button");
+        button.classList.remove("is-confirming");
+        button.textContent = "清空输入";
+      }
+
+      function requestClear() {
+        const button = document.querySelector("#clear-button");
+        if (!button.classList.contains("is-confirming")) {
+          button.classList.add("is-confirming");
+          button.textContent = "确认清空";
+          clearTimer = window.setTimeout(resetClearButton, 3500);
+          return;
+        }
+        resetClearButton();
+        clearForm();
       }
 
       try {
@@ -946,9 +1027,10 @@
 
       fields.forEach((field) => field.addEventListener(field.type === "checkbox" || field.tagName === "SELECT" ? "change" : "input", update));
       document.querySelector("#reset-button").addEventListener("click", restoreExample);
-      document.querySelector("#clear-button").addEventListener("click", clearForm);
+      document.querySelector("#clear-button").addEventListener("click", requestClear);
       document.querySelector("#copy-results").addEventListener("click", copyResults);
-      document.querySelector("#export-image").addEventListener("click", exportResultsImage);
+      document.querySelector("#copy-image").addEventListener("click", copyResultImage);
+      document.querySelector("#download-image").addEventListener("click", downloadResultImage);
       update();
     })();
   </script>
