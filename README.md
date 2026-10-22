@@ -2,7 +2,7 @@
 
 一个纯前端的薪资计算器，用来估算税后月均到手、首年现金、年化总包和期权归属
 
-在线页面：[薪资计算器](https://mx-pai.github.io/salary-calculator/)
+在线页面：[薪资计算器](https://mx-pai.cn/salary-calculator/)
 
 ## 使用
 

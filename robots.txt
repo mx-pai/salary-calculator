@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mx-pai.github.io/salary-calculator/sitemap.xml
+Sitemap: https://mx-pai.cn/salary-calculator/sitemap.xml
