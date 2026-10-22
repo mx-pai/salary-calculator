@@ -131,6 +131,7 @@
     .total.net-total { color: #d8e794; font-size: clamp(39px, 4vw, 49px); font-weight: 700; line-height: 1.17; }
     .total.net-total.is-pending { color: #c3d3ca; font-size: 23px; font-weight: 560; }
     .total-caption { min-height: 34px; margin-top: 7px; color: #c3d3ca; font-size: 12px; line-height: 1.55; }
+    .net-secondary { margin: 6px 0 0; color: #c3d3ca; font-size: 12px; font-variant-numeric: tabular-nums; }
     .result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
     .copy-button { border-color: #7c9b8d; background: transparent; color: #f2f3e9; }
     .copy-button:hover { border-color: #c4d8ca; background: #194b3d; }
@@ -376,6 +377,7 @@
             <div class="result-label"><h2>薪酬估算单</h2><span class="example-tag" id="example-tag">待填写</span></div>
             <div class="net-label">税后月均到手</div>
             <div class="total net-total" id="monthly-net" aria-live="polite">待填写月薪</div>
+            <p class="net-secondary" id="monthly-with-bonus" hidden></p>
             <p class="total-caption" id="result-caption">填写税前月薪后开始估算</p>
             <div class="result-actions">
               <button class="copy-button" id="copy-results" type="button">复制估算结果</button>
@@ -608,16 +610,20 @@
           ? number("socialBase", useDefaultTax ? monthly : 0) * number("socialRate", useDefaultTax ? 10.5 : 0) / 100
             + number("housingBase", useDefaultTax ? monthly : 0) * number("housingRate", useDefaultTax ? 7 : 0) / 100
           : 0;
-        function yearDetails(index) {
+        function yearDetails(index, bonusOverride) {
           const employedMonths = index === 0 ? firstYearMonths : 12;
-          const fixedSalaryMonths = salaryMonths * employedMonths / 12
-            - (1 - probationRate) * Math.min(probationMonths, employedMonths);
+          // 试用期只发生在入职首年；第 2–4 年不再承受这笔差额
+          const probationShortfall = index === 0
+            ? (1 - probationRate) * Math.min(probationMonths, employedMonths)
+            : 0;
+          const fixedSalaryMonths = salaryMonths * employedMonths / 12 - probationShortfall;
           const salary = monthly * Math.max(0, fixedSalaryMonths);
-          const bonus = expectedBonus * employedMonths / 12;
+          const bonus = (bonusOverride ?? expectedBonus) * employedMonths / 12;
           const allowance = annualAllowance * employedMonths / 12;
           const signOn = index === 0 ? number("signOnYear1") : index === 1 ? number("signOnYear2") : 0;
           const contributions = contributionPerMonth * employedMonths;
-          const deductions = specialDeduction * employedMonths / 12;
+          // 年度汇算口径：6 万基本减除费用与专项附加扣除都按全年计
+          const deductions = specialDeduction;
           const taxResult = taxForYear({ salary, bonus, allowance, signOn, contributions, specialDeduction: deductions, mode: taxMode });
           const recurringCash = salary + bonus + allowance;
           const grossCash = recurringCash + signOn;
@@ -634,10 +640,12 @@
 
         const years = Array.from({ length: 4 }, (_, index) => yearDetails(index));
         const steadyYear = yearDetails(2);
-        const steadyCash = salaryMonths * monthly + expectedBonus + annualAllowance;
+        const steadyCash = steadyYear.recurringCash;
         const annualized = steadyCash + annualEquity;
         const firstYear = years[0].grossCash + years[0].equityValue;
-        const averageMonthlyNet = canEstimateNet ? steadyYear.netCash / 12 : 0;
+        const recurringYear = yearDetails(2, 0);
+        const averageMonthlyNet = canEstimateNet ? recurringYear.netCash / 12 : 0;
+        const averageMonthlyWithBonus = canEstimateNet ? steadyYear.netCash / 12 : 0;
         const exerciseCash = years[0].vestedUnits * strikePrice;
         const cashShare = annualized > 0 ? steadyCash / annualized * 100 : 0;
         const equityShare = annualized > 0 ? annualEquity / annualized * 100 : 0;
@@ -649,6 +657,10 @@
         const monthlyNet = document.querySelector("#monthly-net");
         monthlyNet.textContent = canEstimateNet ? money(averageMonthlyNet) : hasSalary ? "待设置缴费参数" : "待填写月薪";
         monthlyNet.classList.toggle("is-pending", !canEstimateNet);
+        const withBonus = document.querySelector("#monthly-with-bonus");
+        withBonus.hidden = !canEstimateNet;
+        withBonus.dataset.amount = canEstimateNet ? money(averageMonthlyWithBonus) : "";
+        withBonus.textContent = canEstimateNet ? `含年终奖年均到手 ${withBonus.dataset.amount}` : "";
         document.querySelector("#steady-net").textContent = canEstimateNet ? money(steadyYear.netCash) : "—";
         document.querySelector("#first-year-net").textContent = canEstimateNet ? money(years[0].netCash) : "—";
         document.querySelector("#annual-tax").textContent = canEstimateNet ? money(steadyYear.tax) : "—";
@@ -657,7 +669,7 @@
           ? "填写税前月薪后开始估算"
           : !canEstimateNet
             ? "填写社保与公积金参数，或勾选「按常见缴费参数估算」"
-            : "税后年现金平均到每月，年终奖和期权不计入月均";
+            : "经常性月度到手：固定薪酬摊入月均，不含年终奖与期权";
         document.querySelector("#exercise-cost").textContent = money(exerciseCash);
         const modeLabel = taxMode === "auto"
           ? `自动比较 · ${steadyYear.selectedTaxMode === "separate" ? "单独计税" : "并入综合所得"}`
@@ -740,8 +752,10 @@
         const taxBasis = fieldFor("useDefaultTax").checked
           ? "常见缴费参数（空白基数按月薪、社保 10.5%、公积金 7%）"
           : `自定义缴费参数（社保 ${fieldFor("socialRate").value}%，公积金 ${fieldFor("housingRate").value}%）`;
+        const bonusMonthlyAmount = document.querySelector("#monthly-with-bonus").dataset.amount;
         const result = [
           `税后月均到手：${document.querySelector("#monthly-net").textContent}`,
+          ...(bonusMonthlyAmount ? [`含年终奖年均到手：${bonusMonthlyAmount}`] : []),
           `税后年现金：${document.querySelector("#steady-net").textContent}`,
           `首年税后现金：${document.querySelector("#first-year-net").textContent}`,
           `年化税前总包：${document.querySelector("#annual-total").textContent}`,
@@ -778,7 +792,9 @@
         const top = 36;
         const left = 40;
         const cardWidth = 1120;
-        const headerHeight = 360;
+        const netSecondaryAmount = document.querySelector("#monthly-with-bonus").dataset.amount || "";
+        const headerExtra = netSecondaryAmount ? 24 : 0;
+        const headerHeight = 360 + headerExtra;
         const contentLeft = left + 40;
         const contentRight = left + cardWidth - 40;
         const barWidth = contentRight - contentLeft;
@@ -876,13 +892,16 @@
           weight: 700,
           color: netReady ? palette.lime : palette.greenSoft
         });
-        text(read("result-caption"), contentLeft, 275, { size: 14, color: palette.greenSoft });
-        line(contentLeft, 304, contentRight, 304, "#45675c");
-        line(600, 322, 600, 374, "#45675c");
-        text("税后年现金", contentLeft, 337, { size: 13, color: palette.greenSoft });
-        text(read("steady-net"), contentLeft, 368, { size: 23, weight: 650, color: "#f2f3e9" });
-        text("年化税前总包", 630, 337, { size: 13, color: palette.greenSoft });
-        text(read("annual-total"), 630, 368, { size: 23, weight: 650, color: "#f2f3e9" });
+        if (netSecondaryAmount) {
+          text(`含年终奖年均到手 ${netSecondaryAmount}`, contentLeft, 275, { size: 14, color: palette.greenSoft });
+        }
+        text(read("result-caption"), contentLeft, 275 + headerExtra, { size: 14, color: palette.greenSoft });
+        line(contentLeft, 304 + headerExtra, contentRight, 304 + headerExtra, "#45675c");
+        line(600, 322 + headerExtra, 600, 374 + headerExtra, "#45675c");
+        text("税后年现金", contentLeft, 337 + headerExtra, { size: 13, color: palette.greenSoft });
+        text(read("steady-net"), contentLeft, 368 + headerExtra, { size: 23, weight: 650, color: "#f2f3e9" });
+        text("年化税前总包", 630, 337 + headerExtra, { size: 13, color: palette.greenSoft });
+        text(read("annual-total"), 630, 368 + headerExtra, { size: 23, weight: 650, color: "#f2f3e9" });
 
         text("年度收入组成", contentLeft, headingY, { size: 16, weight: 650 });
         text("现金 · 股权估值", contentRight, headingY, { size: 12, color: palette.muted, align: "right" });
