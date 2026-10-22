@@ -11,7 +11,7 @@
     signOnYear1: "", signOnYear2: "", signOnReserve: "", useDefaultTax: false,
     socialBase: "", socialRate: "", socialFloor: "", socialCeiling: "",
     housingBase: "", housingRate: "", housingFloor: "", housingCeiling: "",
-    specialDeduction: "", bonusTaxMode: "auto", equityUnits: "", vestingYears: 4,
+    specialDeduction: "", bonusTaxMode: "auto", bonusPayMonth: 12, extraSalaryPayMonth: 12, equityUnits: "", vestingYears: 4,
     cliffMonths: 12, strikePrice: "", shareLow: "", shareBase: "", shareHigh: ""
   });
   const EXAMPLE = Object.freeze({
@@ -21,7 +21,7 @@
   });
   const LIMITS = {
     salaryMonths: [0, 24], bonusMonths: [0, 36], firstYearMonths: [0, 12],
-    probationMonths: [0, 12], probationRate: [0, 100], socialRate: [0, 30],
+    probationMonths: [0, 12], bonusPayMonth: [1, 12], extraSalaryPayMonth: [1, 12], probationRate: [0, 100], socialRate: [0, 30],
     housingRate: [0, 30], vestingYears: [0.25, 20], cliffMonths: [0, 240]
   };
   const hasValue = value => value !== null && value !== undefined && String(value).trim() !== "";
@@ -69,7 +69,7 @@
       if ((key === "annualBonus" && state.bonusMode !== "amount") || (key === "bonusMonths" && state.bonusMode !== "months")) continue;
       const amount = Number(value);
       const [low, high] = LIMITS[key] || [0, Infinity];
-      if (!Number.isFinite(amount) || amount < low || amount > high) {
+      if (!Number.isFinite(amount) || amount < low || amount > high || (["bonusPayMonth", "extraSalaryPayMonth"].includes(key) && !Number.isInteger(amount))) {
         errors.push({ field: key, message: high === Infinity ? "请输入不小于 0 的数字" : `请输入 ${low} 到 ${high} 之间的数值` });
       }
     }
@@ -101,11 +101,12 @@
       monthly: ready ? socialBase * socialRate / 100 + housingBase * housingRate / 100 : null };
   }
 
+  const INCOME_BRACKETS = [[36000, .03, 0], [144000, .1, 2520], [300000, .2, 16920],
+    [420000, .25, 31920], [660000, .3, 52920], [960000, .35, 85920], [Infinity, .45, 181920]];
+  const bracketFor = income => INCOME_BRACKETS.find(([limit]) => Math.max(0, income) <= limit);
   function progressiveTax(income) {
-    const brackets = [[36000, .03, 0], [144000, .1, 2520], [300000, .2, 16920],
-      [420000, .25, 31920], [660000, .3, 52920], [960000, .35, 85920], [Infinity, .45, 181920]];
     const taxable = Math.max(0, income);
-    const [, rate, deduction] = brackets.find(([limit]) => taxable <= limit);
+    const [, rate, deduction] = bracketFor(taxable);
     return Math.max(0, taxable * rate - deduction);
   }
 
@@ -123,6 +124,52 @@
     const separate = progressiveTax(taxable) + separateBonusTax(bonus);
     const selected = mode === "auto" ? separate < combined ? "separate" : "combined" : mode;
     return { tax: selected === "separate" ? separate : combined, selected };
+  }
+
+  // Standard full-year payroll: cumulative withholding, no monthly refunds
+  function monthlyPayroll(state, contributions, mode) {
+    const round = value => Math.round((value + Number.EPSILON) * 100) / 100;
+    const allocate = (total, month) => round(total * month / 12) - round(total * (month - 1) / 12);
+    const salary = number(state, "monthlySalary"), salaryMonths = number(state, "salaryMonths");
+    const ordinarySalary = salary * Math.min(salaryMonths, 12);
+    const extraSalary = round(salary * Math.max(0, salaryMonths - 12));
+    const bonus = round(bonusAmount(state));
+    const bonusMonth = number(state, "bonusPayMonth", 12), extraMonth = number(state, "extraSalaryPayMonth", 12);
+    let cumulativeIncome = 0, cumulativeContributions = 0, cumulativeSalaryTax = 0, cumulativeBonusTax = 0, cumulativeGross = 0;
+    const months = Array.from({ length: 12 }, (_, index) => {
+      const month = index + 1;
+      const wages = round(allocate(ordinarySalary, month) + (month === extraMonth ? extraSalary : 0));
+      const allowance = allocate(number(state, "annualAllowance"), month);
+      const paidBonus = month === bonusMonth ? bonus : 0;
+      const contribution = round(contributions.monthly);
+      const gross = round(wages + allowance + paidBonus);
+      cumulativeGross = round(cumulativeGross + gross);
+      cumulativeIncome = round(cumulativeIncome + wages + allowance + (mode === "combined" ? paidBonus : 0));
+      cumulativeContributions = round(cumulativeContributions + contribution);
+      const basicDeduction = 5000 * month;
+      const specialDeduction = round(number(state, "specialDeduction") * month / 12);
+      const taxable = Math.max(0, round(cumulativeIncome - cumulativeContributions - basicDeduction - specialDeduction));
+      const [, rate, quickDeduction] = bracketFor(taxable);
+      const salaryTaxDue = round(progressiveTax(taxable));
+      const salaryTax = Math.max(0, round(salaryTaxDue - cumulativeSalaryTax));
+      const bonusTax = mode === "separate" ? round(separateBonusTax(paidBonus)) : 0;
+      cumulativeSalaryTax = round(cumulativeSalaryTax + salaryTax);
+      cumulativeBonusTax = round(cumulativeBonusTax + bonusTax);
+      const tax = round(salaryTax + bonusTax);
+      return { month, wages, allowance, bonus: paidBonus, gross, contributions: contribution,
+        salaryTax, bonusTax, tax, net: round(gross - contribution - tax),
+        cumulativeIncome, cumulativeGross, cumulativeContributions, basicDeduction, specialDeduction,
+        taxable, rate, quickDeduction, salaryTaxDue, cumulativeSalaryTax, cumulativeBonusTax,
+        cumulativeTax: round(cumulativeSalaryTax + cumulativeBonusTax) };
+    });
+    const totalTax = months[11].cumulativeTax;
+    const annual = taxForYear({ salary: round(salary * salaryMonths), bonus,
+      allowance: round(number(state, "annualAllowance")), signOn: 0,
+      contributions: cumulativeContributions, specialDeduction: round(number(state, "specialDeduction")), mode });
+    return { months, mode, bonusMonth, extraMonth, extraSalary, totalTax,
+      annualTax: round(annual.tax), refund: Math.max(0, round(totalTax - annual.tax)),
+      totalNet: round(months.reduce((total, month) => total + month.net, 0)),
+      totalGross: cumulativeGross, totalContributions: cumulativeContributions };
   }
 
   function calculate(input) {
@@ -172,6 +219,7 @@
       monthly, salaryMonths, annualSalary: monthly * salaryMonths, annualAllowance: allowance,
       hasIncome: monthly > 0 || bonus > 0 || allowance > 0 || units > 0,
       grossReady: !incomeErrors, isExample, steady, years, annualPackage,
+      payroll: netReady ? monthlyPayroll(state, contributions, steady.taxMode) : null,
       monthlyNet: netReady ? recurring.net / 12 : null,
       monthlyWithBonus: netReady ? steady.net / 12 : null,
       exerciseCost: years[0].vestedUnits * strike,

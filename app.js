@@ -7,6 +7,9 @@
   const $ = selector => document.querySelector(selector);
   const setText = (selector, value) => { $(selector).textContent = value; };
   let report, state, statusTimer, announceTimer, clearTimer;
+  let receiptStyle = "paper", resultView = "receipt", selectedMonth = 1;
+  let exportSnapshot, exportStyle, exportMeta, exportBlob, exportUrl, exportRevision = 0;
+  try { receiptStyle = localStorage.getItem("mx-pai-receipt-style") === "thermal" ? "thermal" : "paper"; } catch (_) { /* 使用默认纸张 */ }
 
   function readStored() {
     try {
@@ -91,8 +94,6 @@
     $("#result-kpis").replaceChildren(...value.kpis.map(item => {
       const node = element("div"); node.append(element("span", "", item.label), element("strong", "", item.value)); return node;
     }));
-    $("#cash-fill").style.width = `${value.mix.cash * 100}%`;
-    $("#equity-fill").style.width = `${value.mix.equity * 100}%`;
     renderRows("#income-breakdown", value.rows);
     renderRows("#deduction-breakdown", value.deductions);
     $("#deduction-breakdown").hidden = !value.hasIncome;
@@ -115,10 +116,63 @@
     }) : [element("p", "empty-result", "填写期权份数和三个估值后显示") ]));
     setText("#exercise-cost", value.exerciseCost);
     $(".result-more").hidden = !value.hasIncome;
-    for (const selector of ["#copy-results", "#copy-image", "#download-image"]) $(selector).disabled = !value.canExport;
+    $("#generate-receipt").disabled = !value.canExport;
     renderErrors(value.errors);
+    const meta = window.SalaryImage.metadata(value);
+    setText("#receipt-date", meta.date);
+    setText("#receipt-mark", value.signature);
+    document.querySelectorAll("[data-quick-key]").forEach(button => button.setAttribute("aria-pressed", String(String(state[button.dataset.quickKey]).trim() !== "" && Number(state[button.dataset.quickKey]) === Number(button.dataset.quickValue))));
+    $("#bonus-quick-picks").hidden = mode !== "months";
+    renderPayroll(value.payroll);
     clearTimeout(announceTimer);
     announceTimer = setTimeout(() => setText("#result-announcer", `${value.headline.label} ${value.headline.value}`), 700);
+  }
+  function showResultView(view, focus = false) {
+    resultView = view === "monthly" ? "monthly" : "receipt";
+    $("#receipt-view").hidden = resultView !== "receipt";
+    $("#monthly-view").hidden = resultView !== "monthly";
+    document.querySelectorAll("[data-result-view]").forEach(button => {
+      const active = button.dataset.resultView === resultView;
+      button.setAttribute("aria-selected", String(active)); button.tabIndex = active ? 0 : -1;
+      if (active && focus) button.focus();
+    });
+  }
+  function renderPayroll(payroll) {
+    $("#bonus-timing-field").hidden = !report.timing.bonus;
+    $("#extra-timing-field").hidden = !report.timing.extra;
+    $(".payroll-settings").hidden = $("#bonus-timing-field").hidden && $("#extra-timing-field").hidden;
+    $("#monthly-empty").hidden = Boolean(payroll); $("#monthly-content").hidden = !payroll;
+    if (!payroll) return;
+    setText("#monthly-timing", payroll.timing);
+    setText("#monthly-scope", payroll.scope);
+    setText("#monthly-reconciliation", payroll.reconciliation);
+    $("#monthly-reconciliation").hidden = !payroll.reconciliation;
+    setText("#year-payroll-tax", payroll.totalTax); setText("#year-payroll-net", payroll.totalNet);
+    $("#month-chart").replaceChildren(...payroll.months.map(month => {
+      const button = element("button", "month-column"); button.type = "button"; button.dataset.payrollMonth = month.month;
+      button.setAttribute("aria-label", `${month.label}到手 ${month.net}，个税 ${month.tax}`);
+      const bar = element("span", "month-bar"); bar.style.height = `${4 + month.height * 69}px`; bar.setAttribute("aria-hidden", "true");
+      button.append(bar, element("span", "month-name", String(month.month)));
+      button.title = `${month.label}到手 ${month.net}`; return button;
+    }));
+    $("#monthly-table-body").replaceChildren(...payroll.months.map(month => {
+      const row = element("tr"), heading = element("th"); heading.scope = "row"; row.dataset.monthRow = month.month;
+      const button = element("button", "", `${month.month}月`); button.type = "button"; button.dataset.payrollMonth = month.month;
+      heading.append(button); row.append(heading, element("td", "", month.tax), element("td", "", month.cumulativeTax), element("td", "", month.net)); return row;
+    }));
+    renderSelectedMonth();
+  }
+  function renderSelectedMonth() {
+    const payroll = report.payroll;
+    if (!payroll) return;
+    const month = payroll.months[selectedMonth - 1];
+    setText("#selected-month-label", `${month.label}预计到手`);
+    setText("#selected-month-net", month.net); setText("#selected-month-tax", month.tax);
+    setText("#selected-month-cumulative", month.cumulativeTax);
+    setText("#selected-month-event", month.event); $("#selected-month-event").hidden = !month.event;
+    renderRows("#monthly-current", month.current); renderRows("#month-tax-calculation", month.calculation);
+    document.querySelectorAll("[data-payroll-month]").forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.payrollMonth) === selectedMonth)));
+    document.querySelectorAll("[data-month-row]").forEach(row => row.classList.toggle("is-selected", Number(row.dataset.monthRow) === selectedMonth));
   }
   function update() {
     state = readForm();
@@ -130,52 +184,65 @@
     } catch (_) { setText("#storage-note", "输入仅保留在当前页面"); }
   }
   function setStatus(message) {
-    clearTimeout(statusTimer); setText("#action-status", message);
-    statusTimer = setTimeout(() => setText("#action-status", ""), 3500);
+    clearTimeout(statusTimer);
+    setText("#export-status", message);
+    statusTimer = setTimeout(() => setText("#export-status", ""), 4500);
   }
-  async function copyText() {
-    const value = Report.toText(report);
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
-      await navigator.clipboard.writeText(value);
-      setStatus("结果已复制");
-    } catch (_) {
-      const focused = document.activeElement;
-      const buffer = element("textarea"); buffer.value = value; buffer.className = "visually-hidden";
-      document.body.append(buffer); buffer.select();
-      let copied = false;
-      try { copied = document.execCommand("copy"); } catch (_) { /* 浏览器可能限制旧式复制 */ }
-      buffer.remove(); focused?.focus({ preventScroll: true });
-      setStatus(copied ? "结果已复制" : "复制未完成，请使用图片下载");
-    }
-  }
-  function imageBlob(snapshot) {
+  async function imageBlob(snapshot, options) {
     const css = getComputedStyle(document.documentElement);
-    const tokens = { page: "--page", paper: "--paper-warm", ink: "--ink", muted: "--muted", line: "--line", cash: "--cash", equity: "--equity", green: "--hero", greenInk: "--hero-ink", greenSoft: "--hero-soft", greenBorder: "--hero-border", accent: "--accent" };
-    const palette = Object.fromEntries(Object.entries(tokens).map(([key, token]) => [key, css.getPropertyValue(token).trim()]));
-    return Promise.resolve(document.fonts?.ready).then(() => {
-      const canvas = window.SalaryImage.render(snapshot, { palette, fontFamily: css.fontFamily });
-      return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG unavailable")), "image/png"));
-    });
+    await document.fonts?.ready;
+    const canvas = window.SalaryImage.render(snapshot, { ...options, fontFamily: css.fontFamily });
+    return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG unavailable")), "image/png"));
   }
-  function saveImageFile(blob) {
-    const url = URL.createObjectURL(blob), link = element("a"), now = new Date();
-    const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
-    link.href = url; link.download = `薪资估算-${date}.png`;
+  function saveImageFile(blob, style = exportStyle, meta = exportMeta) {
+    const url = URL.createObjectURL(blob), link = element("a");
+    link.href = url; link.download = `薪酬估算-${meta.date}-${style === "thermal" ? "热敏" : "和纸"}.png`;
     document.body.append(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+  function setReceiptStyle(style) {
+    receiptStyle = style === "thermal" ? "thermal" : "paper";
+    $("#receipt-sheet").dataset.style = receiptStyle;
+    document.querySelectorAll("[data-receipt-style]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.receiptStyle === receiptStyle)));
+    try { localStorage.setItem("mx-pai-receipt-style", receiptStyle); } catch (_) { /* 当前页面仍可切换 */ }
+  }
+  async function refreshExport() {
+    const revision = ++exportRevision;
+    exportBlob = null;
+    $("#copy-image").disabled = true; $("#download-image").disabled = true;
+    $("#export-canvas").setAttribute("aria-busy", "true");
+    setText("#export-loading", "正在生成工资条"); $("#export-loading").hidden = false;
+    setText("#export-status", "");
+    const options = { style: exportStyle, meta: exportMeta };
+    try {
+      const blob = await imageBlob(exportSnapshot, options);
+      if (revision !== exportRevision || !$("#receipt-dialog").open) return;
+      if (exportUrl) URL.revokeObjectURL(exportUrl);
+      exportBlob = blob; exportUrl = URL.createObjectURL(blob);
+      $("#export-preview").src = exportUrl; $("#export-preview").hidden = false;
+      $("#copy-image").disabled = false; $("#download-image").disabled = false;
+      $("#export-loading").hidden = true;
+    } catch (_) { if (revision === exportRevision) setText("#export-loading", "图片生成未完成，请关闭后重试"); }
+    finally { if (revision === exportRevision) $("#export-canvas").setAttribute("aria-busy", "false"); }
+  }
+  function openExport() {
+    if (!report.canExport) return;
+    exportSnapshot = report; exportStyle = receiptStyle; exportMeta = window.SalaryImage.metadata(report);
+    $("#export-preview").hidden = true;
+    $("#export-canvas").classList.remove("is-zoomed");
+    $("#export-preview").setAttribute("aria-pressed", "false");
+    $("#export-preview").setAttribute("aria-label", "放大工资条预览");
+    $("#receipt-dialog").showModal(); refreshExport();
+  }
   async function exportImage(copy) {
-    const pending = imageBlob(report);
+    const blob = exportBlob, style = exportStyle, meta = exportMeta;
+    if (!blob) return;
     try {
       if (copy && navigator.clipboard?.write && window.ClipboardItem) {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": pending })]);
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
         setStatus("图片已复制，可直接粘贴");
-      } else { saveImageFile(await pending); setStatus(copy ? "当前环境改为下载 PNG" : "PNG 已下载"); }
-    } catch (_) {
-      try { saveImageFile(await pending); setStatus("复制未完成，已下载 PNG"); }
-      catch (_) { setStatus("图片生成未完成，请重试"); }
-    }
+      } else { saveImageFile(blob, style, meta); setStatus(copy ? "当前环境已改为保存 PNG" : "工资条已保存"); }
+    } catch (_) { saveImageFile(blob, style, meta); setStatus("复制未完成，已改为保存图片"); }
   }
   function resetClearButton() {
     clearTimeout(clearTimer); $("#clear-button").classList.remove("is-confirming"); setText("#clear-button", "清空输入");
@@ -192,13 +259,52 @@
     }
     resetClearButton(); writeForm(Calc.DEFAULTS); update();
   });
-  $("#edit-tax").addEventListener("click", () => {
+  function editTax() {
     $("#tax-settings").open = true;
     $("#tax-settings").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
     fieldsByKey.get("socialBase").focus({ preventScroll: true });
+  }
+  $("#edit-tax").addEventListener("click", editTax);
+  document.querySelectorAll("[data-edit-tax]").forEach(button => button.addEventListener("click", editTax));
+  document.querySelectorAll("[data-quick-key]").forEach(button => button.addEventListener("click", () => {
+    fieldsByKey.get(button.dataset.quickKey).value = button.dataset.quickValue; update();
+  }));
+  document.querySelectorAll("[data-result-view]").forEach(button => {
+    button.addEventListener("click", () => showResultView(button.dataset.resultView));
+    button.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      showResultView(event.key === "Home" ? "receipt" : event.key === "End" ? "monthly" : resultView === "receipt" ? "monthly" : "receipt", true);
+    });
   });
-  $("#copy-results").addEventListener("click", copyText);
+  $("#monthly-view").addEventListener("click", event => {
+    const button = event.target.closest("[data-payroll-month]");
+    if (button) {
+      selectedMonth = Number(button.dataset.payrollMonth); renderSelectedMonth();
+      if (button.closest("table")) {
+        $("#monthly-headline").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+        $("#monthly-headline").focus({ preventScroll: true });
+      }
+    }
+  });
+  document.querySelectorAll("[data-receipt-style]").forEach(button => button.addEventListener("click", () => setReceiptStyle(button.dataset.receiptStyle)));
+  $("#generate-receipt").addEventListener("click", openExport);
+  function toggleImageZoom() {
+    const zoomed = $("#export-canvas").classList.toggle("is-zoomed");
+    $("#export-preview").setAttribute("aria-pressed", String(zoomed));
+    $("#export-preview").setAttribute("aria-label", zoomed ? "缩小工资条预览" : "放大工资条预览");
+  }
+  $("#export-preview").addEventListener("click", toggleImageZoom);
+  $("#export-preview").addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleImageZoom(); }
+  });
+  $("#close-export").addEventListener("click", () => $("#receipt-dialog").close());
+  $("#receipt-dialog").addEventListener("close", () => {
+    ++exportRevision; exportBlob = null;
+    $("#export-preview").removeAttribute("src");
+    if (exportUrl) { URL.revokeObjectURL(exportUrl); exportUrl = null; }
+  });
   $("#copy-image").addEventListener("click", () => exportImage(true));
   $("#download-image").addEventListener("click", () => exportImage(false));
-  state = readStored(); writeForm(state); update();
+  state = readStored(); writeForm(state); setReceiptStyle(receiptStyle); update();
 })();

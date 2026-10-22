@@ -3,31 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f6fa">
-  <meta name="description" content="在线薪资计算器，按月薪和年终奖月数，估算税后工资、全年收入、首年现金和期权归属。支持社保、公积金及个税参数自定义，数据保存在本地浏览器。">
+  <meta name="theme-color" content="#f6f5f0">
+  <meta name="description" content="在线薪资计算器，按月薪和年终奖月数，估算税后工资、每月累计个税、全年收入、首年现金和期权归属。支持社保、公积金及个税参数自定义，数据保存在本地浏览器。">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:title" content="薪资计算器 - 税后工资、年终奖与期权估算">
-  <meta property="og:description" content="计算税后工资、年终奖、首年现金和期权归属，缴费参数可按所在城市及工资单调整。">
+  <meta property="og:description" content="计算税后工资、每月累计个税与到手明细、年终奖和期权归属，缴费参数可自定义。">
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://mx-pai.cn/salary-calculator/">
   <meta property="og:url" content="https://mx-pai.cn/salary-calculator/">
   <title>薪资计算器 - 税后工资、年终奖与期权估算</title>
   <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
+    {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、每月累计个税、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
   </script>
-  <link rel="stylesheet" href="styles.css?v=20261022c">
+  <link rel="stylesheet" href="styles.css?v=20261023monthly2">
 </head>
 <body>
   <main class="shell">
     <header class="masthead">
-      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M6 20 16 25 26 20M6 13 16 18 26 13M6 6 16 11 26 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>薪资计算器</h1><p class="intro">月薪、奖金、股权，一起算清楚</p></div></div>
+      <div class="brand"><h1>薪资计算器</h1><p class="intro">填好薪酬，留下一张自己的工资条</p></div>
       <div class="mast-actions"><span class="local-note" id="storage-note">输入保存在此浏览器</span><div class="action-buttons"><button class="text-button" id="clear-button" type="button">清空输入</button><button class="text-button" id="reset-button" type="button">载入示例</button></div></div>
     </header>
     <noscript><p class="validation-summary">请启用 JavaScript 后使用薪资计算器</p></noscript>
     <div class="layout">
       <section class="primary-form" aria-labelledby="salary-title">
-        <div class="section-heading"><h2 id="salary-title">你的薪酬</h2><span>填写税前金额</span></div>
+        <div class="section-heading"><h2 id="salary-title">工资与年终奖</h2><span>填写税前金额</span></div>
         <div class="validation-summary" id="income-errors" role="alert" hidden></div>
         <div class="fields">
 <div class="field">
@@ -37,7 +37,7 @@
     </div><div class="field">
       <label for="salary-months">固定发薪月数</label>
       <div class="entry"><input id="salary-months" data-key="salaryMonths" type="number" min="0" step="0.5" max="24" inputmode="decimal" placeholder="12" aria-describedby="error-salaryMonths"><span class="unit">个月</span></div>
-      <p class="field-error" id="error-salaryMonths" data-error-for="salaryMonths" hidden></p>
+      <p class="field-error" id="error-salaryMonths" data-error-for="salaryMonths" hidden></p><div class="quick-picks" role="group" aria-label="固定发薪月数快捷选择"><button type="button" data-quick-key="salaryMonths" data-quick-value="12">12 薪</button><button type="button" data-quick-key="salaryMonths" data-quick-value="13">13 薪</button><button type="button" data-quick-key="salaryMonths" data-quick-value="14">14 薪</button></div>
     </div>
           <div class="bonus-block">
             <div class="bonus-header"><span>年终奖</span><div class="bonus-switch" role="group" aria-label="年终奖填写方式"><button type="button" data-bonus-mode="months" aria-pressed="true">按月数</button><button type="button" data-bonus-mode="amount" aria-pressed="false">按金额</button></div></div>
@@ -51,6 +51,7 @@
       <div class="entry"><input id="annual-bonus" data-key="annualBonus" type="number" min="0" step="1000" inputmode="decimal" placeholder="例如 84000" aria-describedby="error-annualBonus"><span class="unit">元 / 年</span></div>
       <p class="field-error" id="error-annualBonus" data-error-for="annualBonus" hidden></p>
     </div></div><div class="bonus-equivalent"><span id="bonus-equivalent-label">税前金额</span><strong id="bonus-equivalent">¥0</strong><small id="bonus-expression">随月薪自动换算</small></div></div>
+            <div class="quick-picks bonus-picks" id="bonus-quick-picks" role="group" aria-label="年终奖月数快捷选择"><button type="button" data-quick-key="bonusMonths" data-quick-value="0">无奖金</button><button type="button" data-quick-key="bonusMonths" data-quick-value="1">1 个月</button><button type="button" data-quick-key="bonusMonths" data-quick-value="2">2 个月</button><button type="button" data-quick-key="bonusMonths" data-quick-value="3">3 个月</button><button type="button" data-quick-key="bonusMonths" data-quick-value="6">6 个月</button></div>
             <p class="hint">约定的 13 薪计入固定发薪月数，额外年终奖在这里填写</p>
           </div>
         </div>
@@ -61,21 +62,50 @@
       </section>
 
       <aside class="result-panel" id="results" aria-label="薪酬计算结果">
-        <div class="result-hero">
-          <div class="result-label"><h2>收入概览</h2><span class="example-tag" id="example-tag">待填写</span></div>
-          <div class="net-label" id="headline-label">薪酬概览</div><div class="net-total is-pending" id="monthly-net">先填税前月薪</div>
-          <p class="net-secondary" id="monthly-with-bonus" hidden></p><p class="total-caption" id="result-caption">月薪和奖金填好后，结果会实时更新</p>
-
-          <p class="visually-hidden" id="result-announcer" role="status" aria-live="polite" aria-atomic="true"></p>
-          <div class="result-kpis" id="result-kpis"></div>
+        <div class="preview-heading"><div><h2>收入预览</h2><p>年度看总额，每月看到手</p></div><button class="generate-button" id="generate-receipt" type="button" disabled>生成工资条</button></div>
+        <div class="view-tabs" role="tablist" aria-label="结果查看方式"><button type="button" id="tab-receipt" role="tab" data-result-view="receipt" aria-selected="true" aria-controls="receipt-view">年度工资条</button><button type="button" id="tab-monthly" role="tab" data-result-view="monthly" aria-selected="false" aria-controls="monthly-view" tabindex="-1">每月到手</button></div>
+        <div id="receipt-view" role="tabpanel" aria-labelledby="tab-receipt">
+        <div class="paper-options" role="group" aria-label="工资条风格"><button type="button" data-receipt-style="paper" aria-pressed="true">和纸小票</button><button type="button" data-receipt-style="thermal" aria-pressed="false">热敏小票</button></div>
+        <div class="receipt-stage">
+          <div class="receipt-shadow">
+            <article class="receipt-sheet" id="receipt-sheet" data-style="paper" aria-label="工资条内容">
+              <div class="result-hero">
+                <div class="result-label"><h2>薪酬估算单</h2><span class="example-tag" id="example-tag">待填写</span></div>
+                <div class="receipt-meta"><span id="receipt-date"></span><span>人民币 / 年度估算</span></div>
+                <div class="receipt-rule"></div>
+                <div class="net-label" id="headline-label">薪酬概览</div><div class="net-total is-pending" id="monthly-net">先填税前月薪</div>
+                <p class="net-secondary" id="monthly-with-bonus" hidden></p><p class="total-caption" id="result-caption">月薪和奖金填好后，结果会实时更新</p>
+                <p class="visually-hidden" id="result-announcer" role="status" aria-live="polite" aria-atomic="true"></p>
+                <div class="result-kpis" id="result-kpis"></div>
+              </div>
+              <div class="result-body">
+                <div class="mix-heading"><h3>全年收入明细</h3><span>税前</span></div>
+                <div id="income-breakdown"></div><div class="deductions" id="deduction-breakdown"></div>
+                <div class="first-year-group" id="first-year-results"></div>
+              </div>
+              <div class="receipt-bottom"><span>按年度汇算口径估算</span><span>股权估值单独列示</span><span class="receipt-seal" id="receipt-mark">一薪一意</span></div>
+            </article>
+          </div>
         </div>
-        <div class="result-body">
-          <div class="mix-heading"><h3>全年收入构成</h3><span>税前</span></div><div class="splitbar" aria-label="现金与股权构成比例"><span class="cash-fill" id="cash-fill"></span><span class="equity-fill" id="equity-fill"></span></div>
-          <div id="income-breakdown"></div><div class="deductions" id="deduction-breakdown"></div>
-          <div class="first-year-group" id="first-year-results"></div>
         </div>
-        <div class="result-actions"><button class="copy-button" id="copy-results" type="button" disabled>复制文字</button><button class="copy-button" id="copy-image" type="button" disabled><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><rect x="6" y="6" width="10" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M12 6V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h2" stroke="currentColor" stroke-width="1.5"/></svg>复制图片</button><button class="copy-button" id="download-image" type="button" disabled>下载图片</button><span id="action-status" role="status" aria-live="polite" aria-atomic="true"></span></div>
-        <details class="result-more"><summary>查看四年收入与股权估值<span class="disclosure" aria-hidden="true">⌄</span></summary>
+        <section id="monthly-view" role="tabpanel" aria-labelledby="tab-monthly" hidden>
+          <div class="payroll-settings fields"><div class="field" id="bonus-timing-field"><label for="bonus-pay-month">年终奖发放月份</label><div class="entry"><select id="bonus-pay-month" data-key="bonusPayMonth" aria-describedby="error-bonusPayMonth"><option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option><option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option><option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12" selected>12 月</option></select></div><p class="field-error" id="error-bonusPayMonth" data-error-for="bonusPayMonth" hidden></p></div><div class="field" id="extra-timing-field"><label for="extra-pay-month">额外固定工资发放月</label><div class="entry"><select id="extra-pay-month" data-key="extraSalaryPayMonth" aria-describedby="error-extraSalaryPayMonth"><option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option><option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option><option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12" selected>12 月</option></select></div><p class="field-error" id="error-extraSalaryPayMonth" data-error-for="extraSalaryPayMonth" hidden></p></div></div>
+          <div class="monthly-empty" id="monthly-empty"><p>填写月薪与缴费参数后，查看每月到手和累计个税</p><button class="text-button" type="button" data-edit-tax>设置缴费参数</button></div>
+          <div id="monthly-content" hidden>
+            <p class="monthly-hint">按 1 月起全年在职估算，点击月份查看明细</p>
+            <p class="monthly-timing" id="monthly-timing"></p>
+            <div class="month-chart" id="month-chart" role="group" aria-label="选择月份查看到手和累计个税"></div>
+            <div class="monthly-headline" id="monthly-headline" tabindex="-1" role="group" aria-label="所选月份到手明细"><div><span id="selected-month-label">1 月预计到手</span><strong id="selected-month-net">—</strong></div><span id="selected-month-event" hidden></span></div>
+            <div class="monthly-kpis"><div><span>本月个税</span><strong id="selected-month-tax">—</strong></div><div><span>截至本月累计个税</span><strong id="selected-month-cumulative">—</strong></div></div>
+            <div id="monthly-current"></div>
+            <details class="monthly-calculation"><summary>这笔税怎么算<span class="disclosure" aria-hidden="true"></span></summary><div id="month-tax-calculation"></div><p class="monthly-hint">累计个税包含综合所得累计预扣，以及已发放奖金的单独计税额</p></details>
+            <details class="monthly-all"><summary>全年 12 个月明细<span class="disclosure" aria-hidden="true"></span></summary><div class="monthly-table-wrap"><table class="monthly-table"><caption class="visually-hidden">全年每月预扣个税与到手金额</caption><thead><tr><th scope="col">月份</th><th scope="col">本月个税</th><th scope="col">累计个税</th><th scope="col">到手</th></tr></thead><tbody id="monthly-table-body"></tbody><tfoot><tr><th scope="row">全年</th><td id="year-payroll-tax" colspan="2">—</td><td id="year-payroll-net">—</td></tr></tfoot></table></div></details>
+            <p class="monthly-reconciliation" id="monthly-reconciliation" hidden></p>
+            <p class="monthly-hint" id="monthly-scope"></p>
+            <p class="monthly-hint">采用累计预扣法，<a href="https://www.chinatax.gov.cn/chinatax/n810341/n810765/n3359382/201812/c4182700/content.html" target="_blank" rel="noreferrer">查看税务总局计算口径</a></p>
+          </div>
+        </section>
+        <details class="result-more"><summary>查看四年收入与股权估值<span class="disclosure" aria-hidden="true"></span></summary>
           <section class="timeline" aria-labelledby="timeline-title"><div class="timeline-head"><h3 id="timeline-title">四年收入与归属</h3><span>首年按在职月数折算</span></div><div class="year-list" id="year-list"></div><div class="timeline-foot"><span class="legend"><i class="swatch"></i>经常性现金</span><span class="legend"><i class="swatch equity"></i>归属估值</span><span class="legend"><i class="swatch sign-on"></i>签字费</span><span class="total-four-year" id="four-year-total"></span></div></section>
           <div class="scenario-box"><div class="scenario-head"><h3>股权估值情景</h3><span>年化税前总包</span></div><div class="scenario-list" id="scenario-list"></div><div class="tax-breakdown first-year"><span>首年预计行权资金</span><strong id="exercise-cost">—</strong></div></div>
         </details>
@@ -83,7 +113,7 @@
 
       <div class="optional-group" aria-label="其他薪酬条件">
         <details class="optional-section" id="tax-settings">
-          <summary><div><h2>社保、公积金与个税</h2><p id="tax-settings-summary">设置后显示税后到手</p></div><span class="disclosure" aria-hidden="true">⌄</span></summary>
+          <summary><div><h2>社保、公积金与个税</h2><p id="tax-settings-summary">设置后显示税后到手</p></div><span class="disclosure" aria-hidden="true"></span></summary>
           <div class="optional-body"><div class="validation-summary" id="tax-errors" role="alert" hidden></div><div class="fields"><div class="field">
       <label for="social-base">社保缴费基数</label>
       <div class="entry"><input id="social-base" data-key="socialBase" type="number" min="0" step="100" inputmode="decimal" placeholder="空白按月薪" aria-describedby="error-socialBase"><span class="unit">元 / 月</span></div>
@@ -123,10 +153,10 @@
       <div class="entry"><input id="special-deduction" data-key="specialDeduction" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-specialDeduction"><span class="unit">元 / 年</span></div>
       <p class="field-error" id="error-specialDeduction" data-error-for="specialDeduction" hidden></p>
     </div><div class="field"><label for="bonus-tax-mode">年终奖计税方式</label><div class="entry"><select id="bonus-tax-mode" data-key="bonusTaxMode"><option value="auto">自动比较</option><option value="combined">并入综合所得</option><option value="separate">单独计税</option></select></div></div></div>
-            <p class="tax-explainer">勾选常见参数后，空白基数按月薪、社保比例按 10.5%、公积金按 7%；填写的项目会覆盖常见值。全年一次性奖金单独计税适用于符合条件的收入，<a href="https://www.chinatax.gov.cn/n810219/n810744/n3752930/n3752974/c3970366/content.html" target="_blank" rel="noreferrer">查看税法说明</a></p>
+            <p class="tax-explainer">勾选常见参数后，空白基数按月薪、社保比例按 10.5%、公积金按 7%；填写的项目会覆盖常见值。全年一次性奖金单独计税适用于符合条件的收入，<a href="https://www.mof.gov.cn/jrttts/202308/t20230828_3904461.htm" target="_blank" rel="noreferrer">查看税法说明</a></p>
           </div>
         </details>
-        <details class="optional-section" id="first-year-settings"><summary><div><h2>补贴与首年条件</h2><p id="extras-summary">在职月数、签字费与试用期</p></div><span class="disclosure" aria-hidden="true">⌄</span></summary><div class="optional-body"><div class="fields"><div class="field">
+        <details class="optional-section" id="first-year-settings"><summary><div><h2>补贴与首年条件</h2><p id="extras-summary">在职月数、签字费与试用期</p></div><span class="disclosure" aria-hidden="true"></span></summary><div class="optional-body"><div class="fields"><div class="field">
       <label for="annual-allowance">年度现金补贴</label>
       <div class="entry"><input id="annual-allowance" data-key="annualAllowance" type="number" min="0" step="100" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-annualAllowance"><span class="unit">元 / 年</span></div>
       <p class="field-error" id="error-annualAllowance" data-error-for="annualAllowance" hidden></p>
@@ -155,7 +185,7 @@
       <div class="entry"><input id="sign-on-reserve" data-key="signOnReserve" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-signOnReserve"><span class="unit">税后元</span></div>
       <p class="field-error" id="error-signOnReserve" data-error-for="signOnReserve" hidden></p>
     </div></div><p class="section-tip">首年固定工资、年终奖和补贴按在职月数折算；签字费按填写金额计入</p></div></details>
-        <details class="optional-section" id="equity-settings"><summary><div><h2>期权与股票</h2><p id="equity-summary">按需填写份数、归属和估值</p></div><span class="disclosure" aria-hidden="true">⌄</span></summary><div class="optional-body"><div class="fields"><div class="field">
+        <details class="optional-section" id="equity-settings"><summary><div><h2>期权与股票</h2><p id="equity-summary">按需填写份数、归属和估值</p></div><span class="disclosure" aria-hidden="true"></span></summary><div class="optional-body"><div class="fields"><div class="field">
       <label for="equity-units">授予总份数</label>
       <div class="entry"><input id="equity-units" data-key="equityUnits" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-equityUnits"><span class="unit">份</span></div>
       <p class="field-error" id="error-equityUnits" data-error-for="equityUnits" hidden></p>
@@ -188,9 +218,14 @@
     </div>
     <footer class="footer"><span>按居民个人年度汇算口径估算，实际月度到手以工资单及个税申报为准</span><span>数据保存在当前浏览器</span></footer>
   </main>
-  <script src="calculator.js?v=20261022c"></script>
-  <script src="report.js?v=20261022c"></script>
-  <script src="result-image.js?v=20261022c"></script>
-  <script src="app.js?v=20261022c"></script>
+  <dialog class="export-dialog" id="receipt-dialog" aria-labelledby="export-title">
+    <div class="export-heading"><div><h2 id="export-title">生成工资条</h2><p>图片在本机生成，点击预览可放大</p></div><button type="button" class="text-button" id="close-export">关闭</button></div>
+    <div class="export-canvas" id="export-canvas" aria-busy="false"><img id="export-preview" alt="生成的薪酬估算工资条" role="button" tabindex="0" aria-label="放大工资条预览" aria-pressed="false"><p id="export-loading" role="status">正在生成工资条</p></div>
+    <div class="export-footer"><span id="export-status" role="status" aria-live="polite"></span><div><button class="copy-button" id="copy-image" type="button" disabled>复制图片</button><button class="generate-button" id="download-image" type="button" disabled>保存图片</button></div></div>
+  </dialog>
+  <script src="calculator.js?v=20261023monthly2"></script>
+  <script src="report.js?v=20261023monthly2"></script>
+  <script src="result-image.js?v=20261023monthly2"></script>
+  <script src="app.js?v=20261023monthly2"></script>
 </body>
 </html>

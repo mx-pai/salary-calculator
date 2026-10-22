@@ -6,7 +6,44 @@
   "use strict";
   const yuan = new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY", maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 });
+  const monthlyYuan = new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const monthMoney = value => monthlyYuan.format(value);
   const money = value => value === null || value === undefined ? "—" : yuan.format(Math.round(value));
+
+  function createPayroll(payroll, result) {
+    if (!payroll) return null;
+    const maximum = Math.max(...payroll.months.map(month => month.net), 1);
+    const months = payroll.months.map(month => ({
+      month: month.month, label: `${month.month} 月`, net: monthMoney(month.net), tax: monthMoney(month.tax),
+      cumulativeTax: monthMoney(month.cumulativeTax), height: Math.max(0, month.net) / maximum,
+      event: month.bonus > 0 ? "含年终奖" : payroll.extraSalary > 0 && month.month === payroll.extraMonth ? "含额外固定工资" : "",
+      current: [
+        { label: "工资与补贴", value: monthMoney(month.wages + month.allowance) },
+        ...(month.bonus > 0 ? [{ label: "年终奖", value: monthMoney(month.bonus) }] : []),
+        { label: "个人社保与公积金", value: monthMoney(month.contributions) }
+      ],
+      calculation: [
+        { label: "累计综合所得计税收入", value: monthMoney(month.cumulativeIncome) },
+        { label: "减：累计个人社保与公积金", value: monthMoney(month.cumulativeContributions) },
+        { label: "减：基本减除费用", detail: `5,000 元 × ${month.month} 个月`, value: monthMoney(month.basicDeduction) },
+        { label: "减：累计专项附加扣除", value: monthMoney(month.specialDeduction) },
+        { label: "累计应纳税所得额", value: monthMoney(month.taxable) },
+        { label: "适用预扣率 / 速算扣除数", value: `${decimal.format(month.rate * 100)}% / ${monthMoney(month.quickDeduction)}` },
+        { label: "累计综合所得应预扣税额", value: monthMoney(month.salaryTaxDue) },
+        { label: "减：此前已预扣综合所得税", value: monthMoney(month.cumulativeSalaryTax - month.salaryTax) },
+        { label: "本月综合所得预扣", value: monthMoney(month.salaryTax) },
+        ...(month.bonusTax > 0 ? [{ label: "加：本月年终奖单独计税", value: monthMoney(month.bonusTax) }] : []),
+        { label: "本月个税合计", value: monthMoney(month.tax) }
+      ]
+    }));
+    const rule = payroll.mode === "separate" ? "年终奖单独计税" : "年终奖并入综合所得";
+    return { months, rule, showBonusMonth: result.bonus > 0, showExtraMonth: payroll.extraSalary > 0,
+      timing: `${result.bonus > 0 ? `年终奖 ${payroll.bonusMonth} 月发放，${rule}` : "无额外年终奖"}${payroll.extraSalary > 0 ? `；额外固定工资 ${payroll.extraMonth} 月发放` : ""}`,
+      totalTax: monthMoney(payroll.totalTax), totalNet: monthMoney(payroll.totalNet),
+      reconciliation: payroll.refund >= .01 ? `预计年度汇算可退 ${monthMoney(payroll.refund)}，月度预扣期间暂不退税` : "",
+      scope: `按 1 月起全年在职估算，补贴与专项附加扣除按 12 个月均摊${result.salaryMonths < 12 ? "，固定工资按全年总额均摊" : ""}；首年试用期、签字费另计`
+    };
+  }
 
   function create(result) {
     const { state, contributions, errors, netReady, hasIncome } = result;
@@ -55,9 +92,10 @@
       `专项附加扣除 ${money(Number(state.specialDeduction || 0))}/年；税额按年度汇算估算，实际金额以工资单及申报为准`,
       ...(Number(state.equityUnits) > 0 ? ["股权估值未计流动性折价及离职失效条款"] : [])];
     const report = {
-      title: "薪酬估算单", tag: result.isExample ? "示例方案" : hasIncome ? "当前方案" : "待填写",
+      title: "薪酬估算单", signature: "一薪一意", payroll: createPayroll(result.payroll, result), tag: result.isExample ? "示例方案" : hasIncome ? "当前方案" : "待填写",
       hasIncome, netReady, canExport: hasIncome && result.grossReady && errors.length === 0,
       errors, headline, salaryStructure, contributionText, notes,
+      timing: { bonus: result.bonus > 0, extra: result.salaryMonths > 12 },
       cashFormula: `${salaryStructure}${result.annualAllowance > 0 ? ` + 现金补贴 ${money(result.annualAllowance)}` : ""}`,
       bonus: { value: money(result.bonus), description: bonusDescription,
         expression: state.bonusMode === "months" ? `${money(result.monthly)} × ${decimal.format(bonusMonths)} 个月`

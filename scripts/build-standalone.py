@@ -2,6 +2,7 @@
 from pathlib import Path
 import base64
 import re
+import mimetypes
 import sys
 
 root = Path(__file__).resolve().parent.parent
@@ -9,11 +10,14 @@ target = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else root.parent / "ou
 html = (root / "index.html").read_text()
 css = (root / "styles.css").read_text()
 
-def embed_font(match):
-    data = base64.b64encode((root / match.group(1).split("?")[0]).read_bytes()).decode("ascii")
-    return f'url("data:font/woff2;base64,{data}")'
+def asset_data(path):
+    path = path.split("?")[0]
+    mime = "font/woff2" if path.endswith(".woff2") else mimetypes.guess_type(path)[0]
+    data = base64.b64encode((root / path).read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{data}"
 
-css = re.sub(r'url\((fonts/[^)]+)\)', embed_font, css)
+css = re.sub(r'url\(((?:fonts|assets)/[^)]+)\)', lambda match: f'url("{asset_data(match.group(1))}")', css)
+html = re.sub(r'src="(assets/[^"]+)"', lambda match: f'src="{asset_data(match.group(1))}"', html)
 html = re.sub(r'<link rel="stylesheet" href="styles\.css(?:\?[^"]*)?">', lambda _: f'<style>\n{css}\n</style>', html)
 
 def embed_script(match):
