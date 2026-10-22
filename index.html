@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b2c">
+  <meta name="description" content="免费在线薪资计算器，输入税前月薪、发薪月数、年终奖、社保公积金和期权，估算税后月均到手、首年现金与年化总包。数据保存在本地浏览器。">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="薪资计算器｜税后工资、年终奖与期权总包估算">
+  <meta property="og:description" content="输入月薪和奖金，估算税后到手、首年现金与期权归属。">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://mx-pai.github.io/salary-calculator/">
+  <meta property="og:url" content="https://mx-pai.github.io/salary-calculator/">
+  <title>薪资计算器｜税后工资、年终奖与期权总包估算</title>
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.github.io/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"免费在线薪资计算器，估算税后月均到手、首年现金、年终奖和期权归属。数据保存在本地浏览器。"}
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #edf2f3;
+      --paper: #ffffff;
+      --ink: #1b303b;
+      --muted: #647985;
+      --quiet: #84959d;
+      --line: #d8e2e5;
+      --soft-line: #e9eff0;
+      --cash: #197e76;
+      --cash-light: #d8eeea;
+      --equity: #bb842f;
+      --equity-light: #f3e7d2;
+      --oneoff: #7d6ab2;
+      --deep: #193640;
+      --deep-soft: #254650;
+      --focus: #226db3;
+      --radius: 11px;
+      font-family: "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(1180px, calc(100% - 56px));
+      margin: 0 auto;
+      padding: 34px 0 48px;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 25px;
+    }
+
+    .brand-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--cash);
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: .02em;
+    }
+
+    .mark {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 3px;
+      width: 19px;
+      height: 17px;
+      padding: 2px;
+      border-bottom: 2px solid currentColor;
+    }
+
+    .mark i { display: block; width: 3px; border-radius: 2px 2px 0 0; background: currentColor; }
+    .mark i:nth-child(1) { height: 6px; opacity: .58; }
+    .mark i:nth-child(2) { height: 10px; opacity: .78; }
+    .mark i:nth-child(3) { height: 13px; }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(29px, 3vw, 38px);
+      line-height: 1.16;
+      letter-spacing: -.045em;
+      font-weight: 720;
+    }
+
+    .intro {
+      max-width: 580px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .mast-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      padding-top: 4px;
+    }
+
+    .local-note {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .local-note::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cash);
+      content: "";
+    }
+
+    .text-button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #c8d5d9;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 620;
+      transition: background-color .16s ease, border-color .16s ease;
+    }
+
+    .text-button:hover { border-color: #9aafb5; background: #f8fbfb; }
+    .text-button:focus-visible, input:focus-visible { outline: 3px solid #73a8d4; outline-offset: 2px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(350px, .92fr);
+      align-items: start;
+      gap: 22px;
+    }
+
+    .form-panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .form-section { padding: 25px 27px 27px; }
+    .form-section + .form-section { border-top: 1px solid var(--soft-line); }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 21px;
+    }
+
+    .section-heading h2 { font-size: 17px; letter-spacing: -.025em; }
+    .section-heading span { color: var(--quiet); font-size: 11px; }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px 17px;
+    }
+
+    .field { min-width: 0; }
+    .field.wide { grid-column: 1 / -1; }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      color: #3d5662;
+      font-size: 12px;
+      font-weight: 620;
+    }
+
+    .entry {
+      display: flex;
+      align-items: center;
+      height: 43px;
+      padding: 0 11px;
+      border: 1px solid #cfdcdf;
+      border-radius: 7px;
+      background: #fff;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .entry:focus-within {
+      border-color: #6b9bc0;
+      box-shadow: 0 0 0 3px rgb(69 130 174 / 12%);
+    }
+
+    .entry input {
+      width: 100%;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      font-size: 15px;
+      font-weight: 640;
+    }
+
+    .entry select {
+      width: 100%;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      appearance: none;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 620;
+    }
+
+    .entry input::-webkit-inner-spin-button,
+    .entry input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+    .entry input[type="number"] { appearance: textfield; }
+
+    .unit {
+      flex: 0 0 auto;
+      margin-left: 9px;
+      color: var(--quiet);
+      font-size: 11px;
+    }
+
+    .hint {
+      margin-top: 6px;
+      color: var(--quiet);
+      font-size: 10.5px;
+      line-height: 1.5;
+    }
+
+    .form-section.tax-section { background: #fbfcfc; }
+    .field select:focus-visible { outline: 0; }
+
+    .tax-explainer {
+      margin-top: 17px;
+      padding: 11px 12px;
+      border-left: 2px solid #7da69d;
+      background: #f0f6f4;
+      color: #557068;
+      font-size: 10px;
+      line-height: 1.65;
+    }
+
+    .tax-explainer a { color: #35685e; text-underline-offset: 2px; }
+
+    .equity-accent { color: var(--equity); }
+
+    .method-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 0 27px 24px;
+      padding-top: 15px;
+      border-top: 1px solid var(--soft-line);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .method-note b {
+      flex: 0 0 auto;
+      color: var(--equity);
+      font-size: 12px;
+    }
+
+    .result-panel {
+      position: sticky;
+      top: 20px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--deep);
+      color: #f4f7f5;
+      box-shadow: 0 12px 28px rgb(22 53 62 / 10%);
+    }
+
+    .result-top { padding: 28px 27px 23px; }
+
+    .result-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #b5c9c8;
+      font-size: 12px;
+    }
+
+    .example-tag {
+      padding: 4px 7px;
+      border: 1px solid rgb(205 223 218 / 26%);
+      border-radius: 4px;
+      color: #d0dfd9;
+      font-size: 10px;
+    }
+
+    .total {
+      margin-top: 12px;
+      font-size: clamp(35px, 4vw, 48px);
+      font-weight: 690;
+      line-height: 1.12;
+      letter-spacing: -.055em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .total-caption { margin-top: 7px; color: #afc2c2; font-size: 11px; }
+
+    .splitbar {
+      display: flex;
+      width: 100%;
+      height: 8px;
+      margin: 22px 0 17px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: rgb(255 255 255 / 12%);
+    }
+
+    .splitbar .cash-fill { background: #62bbb0; transition: width .2s ease; }
+    .splitbar .equity-fill { background: #e3b15d; transition: width .2s ease; }
+
+    .breakdown { display: grid; gap: 12px; }
+
+    .breakdown-row {
+      display: grid;
+      grid-template-columns: 12px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      color: #c6d5d4;
+      font-size: 12px;
+    }
+
+    .breakdown-row strong {
+      color: #f4f7f5;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 620;
+    }
+
+    .swatch { width: 8px; height: 8px; border-radius: 2px; }
+    .swatch.cash { background: #62bbb0; }
+    .swatch.equity { background: #e3b15d; }
+
+    .result-divider { height: 1px; margin: 20px 0 15px; background: rgb(215 231 227 / 16%); }
+
+    .first-year {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #c6d5d4;
+      font-size: 11px;
+    }
+
+    .first-year strong {
+      color: #f1d399;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .takehome {
+      padding: 18px 27px 21px;
+      border-top: 1px solid rgb(215 231 227 / 16%);
+      background: #213f49;
+    }
+
+    .takehome-main {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgb(215 231 227 / 15%);
+    }
+
+    .takehome-main span, .takehome-stat span { display: block; color: #bdd0ce; font-size: 11px; }
+    .takehome-main small { display: block; margin-top: 5px; color: #9fb5b4; font-size: 9px; }
+    .takehome-main strong { color: #d5eee5; font-size: 27px; font-variant-numeric: tabular-nums; letter-spacing: -.04em; white-space: nowrap; }
+
+    .takehome-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+      padding-top: 14px;
+    }
+
+    .takehome-stat strong { display: block; margin-top: 5px; color: #f4f7f5; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+    .tax-breakdown { display: grid; gap: 8px; margin-top: 14px; }
+    .tax-breakdown .breakdown-row { color: #afc4c2; font-size: 10px; }
+    .tax-breakdown .breakdown-row strong { color: #d9e5e2; font-size: 11px; }
+    .tax-breakdown .swatch.tax { background: #d4837e; }
+    .tax-breakdown .swatch.contribution { background: #8c9ba8; }
+
+    .scenario-box {
+      padding: 18px 27px 22px;
+      border-top: 1px solid rgb(215 231 227 / 16%);
+      background: var(--deep);
+    }
+
+    .scenario-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .scenario-head h2 { font-size: 12px; font-weight: 650; }
+    .scenario-head span { color: #a9bfbd; font-size: 9px; }
+    .scenario-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .scenario { padding: 9px 10px; border: 1px solid rgb(215 231 227 / 13%); border-radius: 6px; }
+    .scenario span { display: block; color: #a9bfbd; font-size: 9px; }
+    .scenario strong { display: block; margin-top: 5px; color: #f4f7f5; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .timeline {
+      padding: 22px 27px 25px;
+      border-top: 1px solid rgb(215 231 227 / 16%);
+      background: var(--deep-soft);
+    }
+
+    .timeline-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 17px;
+    }
+
+    .timeline-head h2 { font-size: 14px; font-weight: 650; }
+    .timeline-head span { color: #b6c9c8; font-size: 10px; }
+    .year-list { display: grid; gap: 13px; }
+
+    .year-row {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .year-name { color: #bdd0ce; font-size: 10px; white-space: nowrap; }
+    .year-total { color: #f4f7f5; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .year-track {
+      display: flex;
+      height: 8px;
+      min-width: 0;
+      overflow: hidden;
+      border-radius: 99px;
+      background: rgb(255 255 255 / 11%);
+    }
+
+    .year-track span { height: 100%; transition: width .2s ease; }
+    .year-cash { background: #62bbb0; }
+    .year-equity { background: #e3b15d; }
+    .year-sign-on { background: #aa98d6; }
+
+    .timeline-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 17px;
+      color: #bdcecd;
+      font-size: 10px;
+    }
+
+    .legend { display: inline-flex; align-items: center; gap: 6px; }
+    .legend .swatch { width: 7px; height: 7px; }
+
+    .total-four-year {
+      margin-left: auto;
+      color: #dce8e5;
+      font-size: 10px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 16px;
+      color: #72858d;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .footer span:last-child { white-space: nowrap; }
+
+    /* Compact offer-entry layout */
+    body { background: #f2f5f6; }
+    .shell { width: min(1100px, calc(100% - 48px)); padding-top: 30px; }
+    .masthead { align-items: center; margin-bottom: 22px; }
+    .brand-line { margin-bottom: 10px; }
+    h1 { font-size: clamp(28px, 3vw, 34px); }
+    .intro { margin-top: 7px; }
+    .mast-actions { align-items: flex-end; }
+    .action-buttons { display: flex; gap: 8px; }
+    .text-button { min-height: 38px; padding: 0 13px; border-color: #cbd6da; background: #fff; }
+    .text-button#reset-button { border-color: #b9d7d0; background: #eaf4f1; color: #27695d; }
+
+    .layout { grid-template-columns: minmax(0, 1fr) 370px; gap: 18px; }
+    .form-panel { display: grid; gap: 11px; overflow: visible; border: 0; border-radius: 0; background: transparent; }
+    .form-section, .form-section + .form-section {
+      padding: 21px 22px;
+      border: 1px solid #dce4e7;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .section-heading { margin-bottom: 17px; }
+    .section-heading h2 { font-size: 16px; }
+    .section-heading span { font-size: 11px; }
+    .fields { gap: 13px 14px; }
+    .field label { margin-bottom: 6px; color: #405763; font-size: 11px; }
+    .entry { height: 44px; border-color: #d4dfe2; background: #fff; }
+    .entry:focus-within { border-color: #559283; box-shadow: 0 0 0 3px rgb(65 137 119 / 12%); }
+    .entry input { font-size: 15px; font-weight: 560; }
+    .entry input::placeholder { color: #9aa9af; font-size: 12px; font-weight: 450; }
+    .entry select { font-size: 12px; }
+    .hint { display: none; }
+    .section-tip { margin-top: 14px; color: #71838a; font-size: 10px; line-height: 1.5; }
+
+    details.advanced { padding: 0; }
+    details.advanced > summary, details.result-more > summary {
+      display: flex;
+      min-height: 60px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 22px;
+      color: var(--ink);
+      cursor: pointer;
+      list-style: none;
+    }
+    details.advanced > summary::-webkit-details-marker, details.result-more > summary::-webkit-details-marker { display: none; }
+    details.advanced > summary::after, details.result-more > summary::after {
+      display: grid;
+      width: 23px;
+      height: 23px;
+      flex: 0 0 23px;
+      place-items: center;
+      border: 1px solid #d7e1e4;
+      border-radius: 50%;
+      color: #56717b;
+      content: "+";
+      font-size: 16px;
+      line-height: 1;
+    }
+    details.advanced[open] > summary::after, details.result-more[open] > summary::after { content: "−"; }
+    details.advanced > summary span { font-size: 13px; font-weight: 650; }
+    details.advanced > summary small { margin-left: auto; color: #778a92; font-size: 10px; text-align: right; }
+    .advanced-content { padding: 0 22px 21px; }
+    .advanced-content.fields { padding-top: 0; }
+    .tax-section .advanced-content { padding-top: 0; }
+    .tax-explainer { margin-top: 14px; padding: 9px 11px; font-size: 10px; }
+
+    .result-panel {
+      position: sticky;
+      top: 18px;
+      border: 1px solid #dce4e7;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 8px 24px rgb(27 48 59 / 5%);
+    }
+    .result-top { padding: 22px 22px 19px; }
+    .result-label { color: #61747c; font-size: 11px; }
+    .example-tag { border-color: #dce5e7; background: #f4f7f7; color: #65777d; }
+    .net-label { margin-top: 23px; color: #60737b; font-size: 12px; }
+    .total.net-total { margin-top: 4px; color: #1f6e60; font-size: 38px; letter-spacing: -.04em; }
+    .total-caption { margin-top: 6px; color: #788991; font-size: 10px; line-height: 1.5; }
+    .result-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 19px; }
+    .result-kpis > div { padding: 11px 12px; border: 1px solid #e4eaec; border-radius: 7px; background: #fafcfc; }
+    .result-kpis span { display: block; color: #70828a; font-size: 10px; }
+    .result-kpis strong { display: block; margin-top: 5px; color: #253b45; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .splitbar { height: 7px; margin: 18px 0 13px; background: #edf1f2; }
+    .splitbar .cash-fill { background: #368c7c; }
+    .splitbar .equity-fill { background: #d5a24f; }
+    .breakdown { gap: 10px; }
+    .breakdown-row { grid-template-columns: 9px 1fr auto; gap: 8px; color: #687b83; font-size: 10px; }
+    .breakdown-row strong { color: #344c57; font-size: 11px; }
+    .swatch { width: 7px; height: 7px; }
+    .swatch.cash { background: #368c7c; }
+    .swatch.equity { background: #d5a24f; }
+    .swatch.tax { background: #c67870; }
+    .swatch.contribution { background: #8b9aa1; }
+    .result-divider { margin: 16px 0 12px; background: #e7edef; }
+    .first-year { color: #63777f; font-size: 10px; }
+    .first-year strong { color: #24695d; font-size: 12px; }
+    .gross-first-year { margin-top: 9px; }
+
+    details.result-more { border-top: 1px solid #e6ecee; }
+    details.result-more > summary { min-height: 51px; padding: 0 22px; color: #416c63; font-size: 11px; font-weight: 620; }
+    .timeline { padding: 16px 22px 17px; border-top: 1px solid #e6ecee; background: #f8fafb; }
+    .timeline-head { margin-bottom: 13px; }
+    .timeline-head h2 { color: #2e454f; font-size: 12px; }
+    .timeline-head span { color: #7c8c92; }
+    .year-list { gap: 11px; }
+    .year-name { color: #71838a; }
+    .year-total { color: #334a54; }
+    .year-track { background: #e7edef; }
+    .year-cash { background: #368c7c; }
+    .year-equity { background: #d5a24f; }
+    .year-sign-on { background: #9a88c3; }
+    .timeline-foot { gap: 10px; margin-top: 14px; color: #687c83; }
+    .total-four-year { color: #445c65; font-weight: 620; }
+    .scenario-box { padding: 15px 22px 18px; border-top: 1px solid #e6ecee; background: #fff; }
+    .scenario-head { margin-bottom: 10px; }
+    .scenario-head h2 { color: #2e454f; font-size: 11px; }
+    .scenario-head span { color: #7c8c92; }
+    .scenario { padding: 8px; border-color: #e3e9eb; background: #fafcfc; }
+    .scenario span { color: #71838a; font-size: 8px; }
+    .scenario strong { color: #344b55; font-size: 10px; }
+    .tax-breakdown { margin-top: 12px; }
+    .footer { margin-top: 12px; color: #7b8b91; }
+
+    @media (max-width: 850px) {
+      .shell { width: min(680px, calc(100% - 36px)); padding-top: 26px; }
+      .layout { grid-template-columns: 1fr; }
+      .result-panel { position: static; }
+      .masthead { margin-bottom: 21px; }
+      .result-top { padding: 22px; }
+      .timeline { padding: 16px 22px 17px; }
+    }
+
+    @media (max-width: 540px) {
+      .shell { width: calc(100% - 28px); padding: 21px 0 30px; }
+      .masthead { flex-direction: column; gap: 16px; }
+      .mast-actions { width: 100%; flex-direction: row; align-items: center; justify-content: space-between; padding: 0; }
+      .local-note { font-size: 10px; }
+      .mast-actions { flex-direction: column; align-items: flex-start; gap: 9px; }
+      .action-buttons { width: 100%; }
+      .form-section, .form-section + .form-section { padding: 18px 15px; }
+      details.advanced > summary { min-height: 58px; padding: 0 15px; }
+      details.advanced > summary small { max-width: 50%; }
+      .advanced-content { padding: 0 15px 18px; }
+      .advanced-content.fields { padding-top: 0; }
+      h1 { font-size: 30px; }
+      .intro { max-width: 38ch; font-size: 13px; }
+      .form-section { padding: 21px 17px 23px; }
+      .fields { gap: 16px 11px; }
+      .field label { min-height: 18px; font-size: 11px; }
+      .entry { height: 41px; padding: 0 9px; }
+      .entry input { font-size: 14px; }
+      .unit { margin-left: 5px; font-size: 10px; }
+      .hint { font-size: 9.5px; }
+      .total.net-total { font-size: 34px; }
+      .year-row { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 7px; }
+      .year-total { font-size: 10px; }
+      details.result-more > summary { padding: 0 15px; }
+      .scenario-list { gap: 5px; }
+      .scenario { padding: 7px 6px; }
+      .scenario strong { font-size: 9px; }
+      .footer { flex-direction: column; gap: 5px; }
+      .footer span:last-child { white-space: normal; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+
+    /* Payroll desk visual system */
+    :root {
+      --page: #edf1ec;
+      --paper: #ffffff;
+      --ink: #20362d;
+      --muted: #697d72;
+      --quiet: #83948a;
+      --line: #d8e2da;
+      --soft-line: #e8eee9;
+      --cash: #24704f;
+      --cash-light: #dceadf;
+      --equity: #b97b2b;
+      --equity-light: #f2e7d5;
+      --oneoff: #7d6ab2;
+      --deep: #123b2c;
+      --deep-soft: #254d3d;
+      --focus: #347a59;
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    body { background: var(--page); color: var(--ink); }
+    .shell { width: min(1160px, calc(100% - 48px)); padding: 36px 0 46px; }
+    .masthead { align-items: center; margin-bottom: 24px; }
+    .brand-line { color: var(--cash); }
+    h1 { color: var(--ink); font-size: clamp(30px, 3.2vw, 38px); letter-spacing: -.04em; }
+    .intro { max-width: 600px; color: var(--muted); }
+    .layout { grid-template-columns: minmax(0, 1.12fr) minmax(330px, .88fr); gap: 24px; }
+
+    .form-panel {
+      display: block;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: 0 8px 28px rgb(30 54 43 / 4%);
+    }
+    .form-panel .form-section,
+    .form-panel .form-section + .form-section {
+      padding: 24px 27px;
+      border: 0;
+      border-radius: 0;
+      background: var(--paper);
+    }
+    .form-panel .form-section + .form-section { border-top: 1px solid var(--soft-line); }
+    .section-heading { margin-bottom: 18px; }
+    .section-heading h2 { color: var(--ink); font-size: 16px; }
+    .section-heading span { color: var(--quiet); font-size: 11px; }
+    .fields { gap: 17px 16px; }
+    .field label { margin-bottom: 7px; color: #435b4e; font-size: 12px; }
+    .entry { height: 46px; border-color: #d3dfd6; border-radius: 7px; background: #fff; }
+    .entry:focus-within { border-color: var(--cash); box-shadow: 0 0 0 3px rgb(36 112 79 / 11%); }
+    .entry input { color: var(--ink); font-size: 15px; font-variant-numeric: tabular-nums; }
+    .entry input::placeholder { color: #9aa89f; font-size: 12px; }
+    .entry select { color: var(--ink); }
+    .unit { color: #74857b; }
+    .section-tip { margin-top: 14px; color: #75867c; font-size: 11px; }
+
+    .form-panel details.advanced { padding: 0; background: #fbfcfa; }
+    .form-panel details.advanced > summary {
+      min-height: 59px;
+      padding: 0 27px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .form-panel details.advanced > summary span { font-size: 13px; font-weight: 650; }
+    .form-panel details.advanced > summary small { color: var(--muted); font-size: 11px; }
+    .form-panel details.advanced > summary::after { border-color: #cfdbd2; color: var(--cash); }
+    .form-panel details.advanced[open] > summary { border-bottom: 1px solid var(--soft-line); }
+    .advanced-content { padding: 18px 27px 22px; }
+    .advanced-content.fields { padding-top: 18px; }
+    .tax-section .advanced-content { padding-top: 18px; }
+    .tax-explainer { background: #f1f5f1; color: #607368; font-size: 11px; line-height: 1.7; }
+    .tax-explainer a { color: var(--cash); }
+
+    .result-panel {
+      position: sticky;
+      top: 16px;
+      overflow: hidden;
+      border: 1px solid #d2ded5;
+      border-radius: 13px;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 12px 32px rgb(30 54 43 / 7%);
+    }
+    .result-top { padding: 0; }
+    .result-hero { padding: 23px 24px 21px; background: var(--deep); color: #f5f7f1; }
+    .result-label { color: #d4dfd6; font-size: 11px; }
+    .example-tag { border-color: rgb(255 255 255 / 22%); background: rgb(255 255 255 / 9%); color: #dfe9df; }
+    .net-label { margin-top: 24px; color: #d7e0d7; font-size: 12px; }
+    .total.net-total { margin-top: 3px; color: #d9e99c; font-size: clamp(36px, 4vw, 46px); font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+    .total-caption { margin-top: 7px; color: #c2d0c5; font-size: 10px; line-height: 1.6; }
+    .result-actions { display: flex; min-height: 34px; align-items: center; gap: 10px; margin-top: 16px; }
+    .copy-button { min-height: 34px; padding: 0 12px; border: 1px solid rgb(226 238 220 / 40%); border-radius: 6px; background: transparent; color: #eef4e8; cursor: pointer; font-size: 11px; font-weight: 600; }
+    .copy-button:hover { border-color: #d9e99c; background: rgb(255 255 255 / 8%); }
+    .copy-button:focus-visible { outline: 3px solid #d9e99c; outline-offset: 2px; }
+    #copy-status { color: #d9e99c; font-size: 10px; }
+
+    .result-kpis { margin: 0; padding: 19px 22px 2px; }
+    .result-kpis > div { border-color: #e3ebe5; background: #f7f9f7; }
+    .result-kpis span { color: var(--muted); }
+    .result-kpis strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .splitbar { margin: 17px 22px 12px; background: #edf1ed; }
+    .splitbar .cash-fill { background: var(--cash); }
+    .splitbar .equity-fill { background: var(--equity); }
+    .breakdown { gap: 11px; padding: 0 22px; }
+    .breakdown-row { color: #687b70; font-size: 11px; }
+    .breakdown-row strong { color: #31483a; font-variant-numeric: tabular-nums; }
+    .swatch.cash { background: var(--cash); }
+    .swatch.equity { background: var(--equity); }
+    .result-divider { margin: 17px 22px 13px; }
+    .first-year { padding: 0 22px; color: #64796b; font-size: 11px; }
+    .first-year strong { color: var(--cash); font-size: 13px; font-variant-numeric: tabular-nums; }
+    .gross-first-year { margin-top: 10px; padding-bottom: 20px; }
+    details.result-more { border-top: 1px solid var(--soft-line); }
+    details.result-more > summary { min-height: 52px; padding: 0 22px; color: var(--cash); font-size: 12px; }
+    .timeline { padding: 18px 22px; border-top-color: var(--soft-line); background: #f7f9f7; }
+    .timeline-head h2 { color: var(--ink); }
+    .year-cash { background: var(--cash); }
+    .year-equity { background: var(--equity); }
+    .year-sign-on { background: var(--oneoff); }
+    .scenario-box { padding: 17px 22px 20px; }
+    .scenario { border-color: #e2eae4; background: #f7f9f7; }
+    .scenario strong { font-variant-numeric: tabular-nums; }
+    .footer { margin-top: 15px; color: #718279; line-height: 1.7; }
+
+    @media (max-width: 850px) {
+      .shell { width: min(700px, calc(100% - 36px)); padding-top: 25px; }
+      .layout { grid-template-columns: 1fr; gap: 18px; }
+      .result-panel { position: static; }
+      .result-hero { padding: 22px; }
+    }
+    @media (max-width: 540px) {
+      .shell { width: calc(100% - 26px); padding: 20px 0 28px; }
+      .masthead { align-items: flex-start; gap: 15px; }
+      .mast-actions { width: 100%; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+      .action-buttons { width: auto; }
+      .action-buttons .text-button { flex: 1; white-space: nowrap; }
+      .form-panel .form-section, .form-panel .form-section + .form-section { padding: 19px 16px; }
+      .form-panel details.advanced > summary { min-height: 56px; padding: 0 16px; }
+      .form-panel details.advanced > summary small { max-width: 53%; }
+      .advanced-content, .advanced-content.fields, .tax-section .advanced-content { padding: 16px 16px 19px; }
+      .fields { gap: 15px 11px; }
+      .field label { min-height: 18px; font-size: 11px; }
+      .entry { height: 43px; padding: 0 9px; }
+      .entry input { font-size: 14px; }
+      .unit { margin-left: 5px; font-size: 10px; }
+      .result-kpis { padding: 16px 16px 0; }
+      .splitbar { margin-right: 16px; margin-left: 16px; }
+      .breakdown { padding-right: 16px; padding-left: 16px; }
+      .result-divider { margin-right: 16px; margin-left: 16px; }
+      .first-year { padding-right: 16px; padding-left: 16px; }
+      .gross-first-year { padding-bottom: 17px; }
+      details.result-more > summary { padding: 0 16px; }
+      .timeline, .scenario-box { padding-right: 16px; padding-left: 16px; }
+      .total.net-total { font-size: 36px; }
+      .footer { flex-direction: column; gap: 5px; }
+      .footer span:last-child { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <div class="brand-line"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><span>薪资计算器</span></div>
+        <h1>薪资计算器</h1>
+        <p class="intro">填写税前月薪、年终奖和期权，估算税后到手与首年总收入</p>
+      </div>
+      <div class="mast-actions">
+        <span class="local-note" id="storage-note">数据保存在当前浏览器</span>
+        <div class="action-buttons">
+          <button class="text-button" id="clear-button" type="button">清空输入</button>
+          <button class="text-button" id="reset-button" type="button">载入示例</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="form-panel" aria-label="薪酬方案输入">
+        <div class="form-section">
+          <div class="section-heading">
+            <h2>工资与奖金</h2>
+            <span>先填 offer 上的确定收入</span>
+          </div>
+          <div class="fields">
+            <div class="field">
+              <label for="monthly-salary">税前月薪</label>
+              <div class="entry"><input id="monthly-salary" data-key="monthlySalary" type="number" min="0" step="100" inputmode="decimal" placeholder="例如 28000"><span class="unit">元</span></div>
+            </div>
+            <div class="field">
+              <label for="salary-months">固定工资月数（含 13 薪）</label>
+              <div class="entry"><input id="salary-months" data-key="salaryMonths" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="12"><span class="unit">个月</span></div>
+            </div>
+            <div class="field">
+              <label for="annual-bonus">年终奖税前总额</label>
+              <div class="entry"><input id="annual-bonus" data-key="annualBonus" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元 / 年</span></div>
+            </div>
+            <div class="field">
+              <label for="annual-allowance">年度现金补贴</label>
+              <div class="entry"><input id="annual-allowance" data-key="annualAllowance" type="number" min="0" step="100" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元 / 年</span></div>
+            </div>
+          </div>
+          <p class="section-tip">13 薪计入固定工资月数；年终奖填写预计实际发放的税前金额</p>
+        </div>
+
+        <details class="form-section advanced">
+          <summary><span>签字费与首年条件</span><small>入职月份、试用期、分期和追回风险</small></summary>
+          <div class="advanced-content fields">
+            <div class="field">
+              <label for="sign-on-year1">签字费首年发放</label>
+              <div class="entry"><input id="sign-on-year1" data-key="signOnYear1" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元</span></div>
+            </div>
+            <div class="field">
+              <label for="first-year-months">首年在职月数</label>
+              <div class="entry"><input id="first-year-months" data-key="firstYearMonths" type="number" min="0" max="12" step="1" inputmode="numeric" value="12"><span class="unit">个月</span></div>
+            </div>
+            <div class="field">
+              <label for="probation-months">试用期月数</label>
+              <div class="entry"><input id="probation-months" data-key="probationMonths" type="number" min="0" max="12" step="1" inputmode="numeric" value="0"><span class="unit">个月</span></div>
+            </div>
+            <div class="field">
+              <label for="probation-rate">试用期薪资比例</label>
+              <div class="entry"><input id="probation-rate" data-key="probationRate" type="number" min="0" max="100" step="1" inputmode="decimal" value="100"><span class="unit">%</span></div>
+            </div>
+            <div class="field">
+              <label for="sign-on-year2">签字费次年发放</label>
+              <div class="entry"><input id="sign-on-year2" data-key="signOnYear2" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元</span></div>
+            </div>
+            <div class="field wide">
+              <label for="sign-on-reserve">首年追回风险预留</label>
+              <div class="entry"><input id="sign-on-reserve" data-key="signOnReserve" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">税后现金元</span></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="form-section advanced tax-section">
+          <summary><span>税后估算设置</span><small>默认按月薪作缴费基数，可按工资单修改</small></summary>
+          <div class="advanced-content">
+            <div class="fields">
+              <div class="field">
+                <label for="social-base">社保缴费基数</label>
+                <div class="entry"><input id="social-base" data-key="socialBase" type="number" min="0" step="100" inputmode="decimal" placeholder="默认等于月薪"><span class="unit">元 / 月</span></div>
+              </div>
+              <div class="field">
+                <label for="social-rate">社保个人比例</label>
+                <div class="entry"><input id="social-rate" data-key="socialRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="默认 10.5"><span class="unit">%</span></div>
+              </div>
+              <div class="field">
+                <label for="housing-base">公积金缴费基数</label>
+                <div class="entry"><input id="housing-base" data-key="housingBase" type="number" min="0" step="100" inputmode="decimal" placeholder="默认等于月薪"><span class="unit">元 / 月</span></div>
+              </div>
+              <div class="field">
+                <label for="housing-rate">公积金个人比例</label>
+                <div class="entry"><input id="housing-rate" data-key="housingRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="默认 7"><span class="unit">%</span></div>
+              </div>
+              <div class="field">
+                <label for="special-deduction">年度专项附加扣除</label>
+                <div class="entry"><input id="special-deduction" data-key="specialDeduction" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元 / 年</span></div>
+              </div>
+              <div class="field">
+                <label for="bonus-tax-mode">年终奖计税方式</label>
+                <div class="entry"><select id="bonus-tax-mode" data-key="bonusTaxMode"><option value="auto">自动比较</option><option value="combined">并入综合所得</option><option value="separate">单独计税</option></select></div>
+              </div>
+            </div>
+            <p class="tax-explainer">空着时按社保比例 10.5%、公积金比例 7%、缴费基数等于月薪、专项附加扣除 0 元估算；实际比例和基数按所在城市及工资单调整。个税按居民个人年度综合所得估算；单独计税仅适用于符合条件的全年一次性奖金，现行政策截至 2027 年 12 月 31 日，<a href="https://fgk.chinatax.gov.cn/zcfgk/c102416/c5211524/content.html" target="_blank" rel="noreferrer">查看税务总局说明</a></p>
+          </div>
+        </details>
+
+        <details class="form-section advanced">
+          <summary><span>期权与股票</span><small>归属节奏、行权价和估值情景</small></summary>
+          <div class="advanced-content fields">
+            <div class="field">
+              <label for="equity-units">授予总份数</label>
+              <div class="entry"><input id="equity-units" data-key="equityUnits" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">份</span></div>
+            </div>
+            <div class="field">
+              <label for="vesting-years">归属周期</label>
+              <div class="entry"><input id="vesting-years" data-key="vestingYears" type="number" min="0.25" max="20" step="0.25" inputmode="decimal" value="4"><span class="unit">年</span></div>
+            </div>
+            <div class="field">
+              <label for="cliff-months">首期等待期</label>
+              <div class="entry"><input id="cliff-months" data-key="cliffMonths" type="number" min="0" max="120" step="1" inputmode="numeric" value="12"><span class="unit">个月</span></div>
+            </div>
+            <div class="field">
+              <label for="strike-price">行权价</label>
+              <div class="entry"><input id="strike-price" data-key="strikePrice" type="number" min="0" step="0.1" inputmode="decimal" placeholder="RSU 填 0"><span class="unit">元 / 份</span></div>
+            </div>
+            <div class="field">
+              <label for="share-low">低位估值</label>
+              <div class="entry"><input id="share-low" data-key="shareLow" type="number" min="0" step="0.1" inputmode="decimal" placeholder="元 / 份"><span class="unit">元 / 份</span></div>
+            </div>
+            <div class="field">
+              <label for="share-base">基准估值</label>
+              <div class="entry"><input id="share-base" data-key="shareBase" type="number" min="0" step="0.1" inputmode="decimal" placeholder="元 / 份"><span class="unit">元 / 份</span></div>
+            </div>
+            <div class="field">
+              <label for="share-high">高位估值</label>
+              <div class="entry"><input id="share-high" data-key="shareHigh" type="number" min="0" step="0.1" inputmode="decimal" placeholder="元 / 份"><span class="unit">元 / 份</span></div>
+            </div>
+          </div>
+          <p class="section-tip">股权估值不计入税后现金，未考虑流动性折价和离职失效条件</p>
+        </details>
+      </section>
+
+      <aside class="result-panel" aria-label="薪酬计算结果">
+        <div class="result-top">
+          <div class="result-hero">
+            <div class="result-label"><span>薪酬估算</span><span class="example-tag" id="example-tag">待填写</span></div>
+            <div class="net-label">税后月均到手</div>
+            <div class="total net-total" id="monthly-net" aria-live="polite">先填月薪</div>
+            <p class="total-caption">按全年税后现金平均到每月，期权不计入到手金额</p>
+            <div class="result-actions">
+              <button class="copy-button" id="copy-results" type="button">复制估算结果</button>
+              <span id="copy-status" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+          <div class="result-kpis">
+            <div><span>税后年现金</span><strong id="steady-net">—</strong></div>
+            <div><span>年化税前总包</span><strong id="annual-total">—</strong></div>
+          </div>
+          <div class="splitbar" aria-label="现金与股权构成比例">
+            <span class="cash-fill" id="cash-fill"></span>
+            <span class="equity-fill" id="equity-fill"></span>
+          </div>
+          <div class="breakdown">
+            <div class="breakdown-row"><span class="swatch cash"></span><span>稳态年度现金收入</span><strong id="cash-total">—</strong></div>
+            <div class="breakdown-row"><span class="swatch equity"></span><span>年均股权归属估值</span><strong id="equity-total">—</strong></div>
+            <div class="breakdown-row"><span class="swatch tax"></span><span>年度个税估算 · <span id="bonus-tax-result">自动比较</span></span><strong id="annual-tax">—</strong></div>
+            <div class="breakdown-row"><span class="swatch contribution"></span><span>个人社保与公积金</span><strong id="annual-contribution">—</strong></div>
+          </div>
+          <div class="result-divider"></div>
+          <div class="first-year"><span>首年税后可支配现金</span><strong id="first-year-net">—</strong></div>
+          <div class="first-year gross-first-year"><span>首年税前总额，含归属与签字费</span><strong id="first-year-total">—</strong></div>
+        </div>
+
+        <details class="result-more">
+          <summary>展开四年归属和估值情景</summary>
+          <section class="timeline" aria-labelledby="timeline-title">
+            <div class="timeline-head">
+              <h2 id="timeline-title">四年收入与归属</h2>
+              <span>首年按在职月数折算</span>
+            </div>
+            <div class="year-list" id="year-list"></div>
+            <div class="timeline-foot">
+              <span class="legend"><i class="swatch cash"></i>经常性现金</span>
+              <span class="legend"><i class="swatch equity"></i>归属估值</span>
+              <span class="legend"><i class="swatch" style="background:#aa98d6"></i>签字费</span>
+              <span class="total-four-year" id="four-year-total"></span>
+            </div>
+          </section>
+          <div class="scenario-box">
+            <div class="scenario-head"><h2 id="scenario-title">股权估值情景</h2><span>年化总包 · 税前</span></div>
+            <div class="scenario-list" id="scenario-list"></div>
+            <div class="tax-breakdown"><div class="breakdown-row"><span class="swatch equity"></span><span>首年预计行权资金</span><strong id="exercise-cost">—</strong></div></div>
+          </div>
+        </details>
+      </aside>
+    </div>
+
+    <footer class="footer">
+      <span>默认缴费参数仅用于估算，实际到手、月度预扣和汇算以工资单及个税申报为准</span>
+      <span>期权未计流动性折价及离职失效条款</span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const storageKey = "salary-ledger-v3";
+      const example = {
+        monthlySalary: 20000,
+        salaryMonths: 13,
+        annualBonus: 20000,
+        annualAllowance: 3000,
+        firstYearMonths: 12,
+        probationMonths: 0,
+        probationRate: 100,
+        signOnYear1: 10000,
+        signOnYear2: 0,
+        signOnReserve: 0,
+        socialBase: 20000,
+        socialRate: 10.5,
+        housingBase: 20000,
+        housingRate: 7,
+        specialDeduction: 0,
+        bonusTaxMode: "auto",
+        equityUnits: 10000,
+        vestingYears: 4,
+        cliffMonths: 12,
+        shareLow: 6,
+        shareBase: 12,
+        shareHigh: 18,
+        strikePrice: 4
+      };
+      const empty = {
+        monthlySalary: "",
+        salaryMonths: 12,
+        annualBonus: "",
+        annualAllowance: "",
+        firstYearMonths: 12,
+        probationMonths: 0,
+        probationRate: 100,
+        signOnYear1: "",
+        signOnYear2: "",
+        signOnReserve: "",
+        socialBase: "",
+        socialRate: "",
+        housingBase: "",
+        housingRate: "",
+        specialDeduction: "",
+        bonusTaxMode: "auto",
+        equityUnits: "",
+        vestingYears: 4,
+        cliffMonths: 12,
+        shareLow: "",
+        shareBase: "",
+        shareHigh: "",
+        strikePrice: ""
+      };
+      const fields = [...document.querySelectorAll("[data-key]")];
+      const yuan = new Intl.NumberFormat("zh-CN", {
+        style: "currency",
+        currency: "CNY",
+        maximumFractionDigits: 0
+      });
+
+      const fieldFor = (key) => fields.find((item) => item.dataset.key === key);
+      const number = (key, fallback = 0) => {
+        const field = fieldFor(key);
+        const value = Number.parseFloat(field?.value ?? "");
+        return Number.isFinite(value) && value >= 0 && field?.value.trim() !== "" ? value : fallback;
+      };
+
+      const money = (value) => yuan.format(Math.round(value || 0));
+      const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+
+      function progressiveTax(taxableIncome) {
+        const brackets = [
+          { limit: 36000, rate: 0.03, deduction: 0 },
+          { limit: 144000, rate: 0.10, deduction: 2520 },
+          { limit: 300000, rate: 0.20, deduction: 16920 },
+          { limit: 420000, rate: 0.25, deduction: 31920 },
+          { limit: 660000, rate: 0.30, deduction: 52920 },
+          { limit: 960000, rate: 0.35, deduction: 85920 },
+          { limit: Infinity, rate: 0.45, deduction: 181920 }
+        ];
+        const income = Math.max(0, taxableIncome);
+        const bracket = brackets.find((item) => income <= item.limit);
+        return Math.max(0, income * bracket.rate - bracket.deduction);
+      }
+
+      function separateBonusTax(bonus) {
+        if (bonus <= 0) return 0;
+        const monthlyBonus = bonus / 12;
+        const brackets = [
+          { limit: 3000, rate: 0.03, deduction: 0 },
+          { limit: 12000, rate: 0.10, deduction: 210 },
+          { limit: 25000, rate: 0.20, deduction: 1410 },
+          { limit: 35000, rate: 0.25, deduction: 2660 },
+          { limit: 55000, rate: 0.30, deduction: 4410 },
+          { limit: 80000, rate: 0.35, deduction: 7160 },
+          { limit: Infinity, rate: 0.45, deduction: 15160 }
+        ];
+        const bracket = brackets.find((item) => monthlyBonus <= item.limit);
+        return Math.max(0, bonus * bracket.rate - bracket.deduction);
+      }
+
+      function taxForYear({ salary, bonus, allowance, signOn, contributions, specialDeduction, mode }) {
+        const baseIncome = salary + allowance + signOn;
+        const commonDeductions = 60000 + contributions + specialDeduction;
+        const combinedTax = progressiveTax(baseIncome + bonus - commonDeductions);
+        const separateTax = progressiveTax(baseIncome - commonDeductions) + separateBonusTax(bonus);
+        if (mode === "combined") return { tax: combinedTax, selected: "combined" };
+        if (mode === "separate") return { tax: separateTax, selected: "separate" };
+        if (separateTax < combinedTax) return { tax: separateTax, selected: "separate" };
+        return { tax: combinedTax, selected: "combined" };
+      }
+
+      function vestFraction(monthsElapsed, totalMonths, cliffMonths) {
+        if (monthsElapsed < cliffMonths) return 0;
+        return clamp(monthsElapsed / totalMonths, 0, 1);
+      }
+
+      function update() {
+        const values = Object.fromEntries(fields.map((field) => [field.dataset.key, field.value]));
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(values));
+          document.querySelector("#storage-note").textContent = "数据保存在当前浏览器";
+        } catch (_) {
+          document.querySelector("#storage-note").textContent = "数据仅保留在当前页面";
+        }
+
+        const monthly = number("monthlySalary");
+        const salaryMonths = number("salaryMonths");
+        const expectedBonus = number("annualBonus");
+        const annualAllowance = number("annualAllowance");
+        const firstYearMonths = clamp(number("firstYearMonths"), 0, 12);
+        const probationMonths = clamp(number("probationMonths"), 0, 12);
+        const probationRate = clamp(number("probationRate"), 0, 100) / 100;
+        const vestingYears = Math.max(number("vestingYears"), 0.25);
+        const totalVestMonths = vestingYears * 12;
+        const cliffMonths = clamp(number("cliffMonths"), 0, totalVestMonths);
+        const equityUnits = number("equityUnits");
+        const strikePrice = number("strikePrice");
+        const basePrice = number("shareBase");
+        const baseIntrinsic = equityUnits * Math.max(basePrice - strikePrice, 0);
+        const annualEquity = baseIntrinsic / vestingYears;
+        const contributionPerMonth = number("socialBase", monthly) * number("socialRate", 10.5) / 100
+          + number("housingBase", monthly) * number("housingRate", 7) / 100;
+        const specialDeduction = number("specialDeduction");
+        const taxMode = fieldFor("bonusTaxMode").value;
+        const reserve = number("signOnReserve");
+        const hasSalary = monthly > 0;
+        const hasAnyCompensation = hasSalary || number("equityUnits") > 0;
+        function yearDetails(index) {
+          const employedMonths = index === 0 ? firstYearMonths : 12;
+          const fixedSalaryMonths = salaryMonths * employedMonths / 12
+            - (1 - probationRate) * Math.min(probationMonths, employedMonths);
+          const salary = monthly * Math.max(0, fixedSalaryMonths);
+          const bonus = expectedBonus * employedMonths / 12;
+          const allowance = annualAllowance * employedMonths / 12;
+          const signOn = index === 0 ? number("signOnYear1") : index === 1 ? number("signOnYear2") : 0;
+          const contributions = contributionPerMonth * employedMonths;
+          const deductions = specialDeduction * employedMonths / 12;
+          const taxResult = taxForYear({ salary, bonus, allowance, signOn, contributions, specialDeduction: deductions, mode: taxMode });
+          const recurringCash = salary + bonus + allowance;
+          const grossCash = recurringCash + signOn;
+          const netCash = grossCash - taxResult.tax - contributions - (index === 0 ? reserve : 0);
+          const startElapsed = index === 0 ? 0 : firstYearMonths + (index - 1) * 12;
+          const endElapsed = firstYearMonths + index * 12;
+          const startFraction = vestFraction(startElapsed, totalVestMonths, cliffMonths);
+          const endFraction = vestFraction(endElapsed, totalVestMonths, cliffMonths);
+          const vestedFraction = Math.max(0, endFraction - startFraction);
+          const vestedUnits = equityUnits * vestedFraction;
+          const equityValue = baseIntrinsic * vestedFraction;
+          return { salary, bonus, allowance, signOn, recurringCash, grossCash, contributions, tax: taxResult.tax, selectedTaxMode: taxResult.selected, netCash, vestedFraction, vestedUnits, equityValue, total: grossCash + equityValue };
+        }
+
+        const years = Array.from({ length: 4 }, (_, index) => yearDetails(index));
+        const steadyYear = yearDetails(2);
+        const steadyCash = salaryMonths * monthly + expectedBonus + annualAllowance;
+        const annualized = steadyCash + annualEquity;
+        const firstYear = years[0].grossCash + years[0].equityValue;
+        const averageMonthlyNet = steadyYear.netCash / 12;
+        const exerciseCash = years[0].vestedUnits * strikePrice;
+        const cashShare = annualized > 0 ? steadyCash / annualized * 100 : 0;
+        const equityShare = annualized > 0 ? annualEquity / annualized * 100 : 0;
+
+        document.querySelector("#annual-total").textContent = hasAnyCompensation ? money(annualized) : "—";
+        document.querySelector("#cash-total").textContent = hasSalary ? money(steadyCash) : "—";
+        document.querySelector("#equity-total").textContent = money(annualEquity);
+        document.querySelector("#first-year-total").textContent = hasAnyCompensation ? money(firstYear) : "—";
+        document.querySelector("#monthly-net").textContent = hasSalary ? money(averageMonthlyNet) : "先填月薪";
+        document.querySelector("#steady-net").textContent = hasSalary ? money(steadyYear.netCash) : "—";
+        document.querySelector("#first-year-net").textContent = hasSalary ? money(years[0].netCash) : "—";
+        document.querySelector("#annual-tax").textContent = hasSalary ? money(steadyYear.tax) : "—";
+        document.querySelector("#annual-contribution").textContent = hasSalary ? money(contributionPerMonth * 12) : "—";
+        document.querySelector("#exercise-cost").textContent = money(exerciseCash);
+        const modeLabel = taxMode === "auto"
+          ? `自动比较 · ${steadyYear.selectedTaxMode === "separate" ? "单独计税" : "并入综合所得"}`
+          : taxMode === "separate" ? "单独计税" : "并入综合所得";
+        document.querySelector("#bonus-tax-result").textContent = modeLabel;
+        document.querySelector("#cash-fill").style.width = `${cashShare}%`;
+        document.querySelector("#equity-fill").style.width = `${equityShare}%`;
+
+        const yearList = document.querySelector("#year-list");
+        const maxYear = Math.max(...years.map((year) => year.total), 1);
+        yearList.replaceChildren(...(hasAnyCompensation ? years.map((year, index) => {
+          const row = document.createElement("div");
+          row.className = "year-row";
+          const name = document.createElement("span");
+          name.className = "year-name";
+          name.textContent = `第 ${index + 1} 年`;
+          const track = document.createElement("div");
+          track.className = "year-track";
+          track.setAttribute("aria-label", `第 ${index + 1} 年 ${money(year.total)}`);
+          for (const [value, className] of [[year.recurringCash, "year-cash"], [year.equityValue, "year-equity"], [year.signOn, "year-sign-on"]]) {
+            const segment = document.createElement("span");
+            segment.className = className;
+            segment.style.width = `${Math.max(0, value / maxYear * 100)}%`;
+            track.append(segment);
+          }
+          const total = document.createElement("strong");
+          total.className = "year-total";
+          total.textContent = money(year.total);
+          row.append(name, track, total);
+          return row;
+        }) : [Object.assign(document.createElement("p"), { className: "empty-result", textContent: "填写月薪或期权份数后显示" })]));
+        document.querySelector("#four-year-total").textContent = hasAnyCompensation
+          ? `四年税前合计 ${money(years.reduce((sum, year) => sum + year.total, 0))}` : "";
+
+        const scenarioList = document.querySelector("#scenario-list");
+        const scenarios = [
+          ["低位", number("shareLow")],
+          ["基准", number("shareBase")],
+          ["高位", number("shareHigh")]
+        ];
+        const hasScenarios = number("equityUnits") > 0
+          && ["shareLow", "shareBase", "shareHigh"].every((key) => fieldFor(key).value.trim() !== "");
+        scenarioList.replaceChildren(...(hasScenarios
+          ? scenarios.map(([label, price]) => {
+          const item = document.createElement("div");
+          item.className = "scenario";
+          const name = document.createElement("span");
+          name.textContent = `${label} · ${money(price)}/份`;
+          const total = document.createElement("strong");
+          total.textContent = money(steadyCash + equityUnits * Math.max(price - strikePrice, 0) / vestingYears);
+          item.append(name, total);
+          return item;
+        })
+          : [Object.assign(document.createElement("p"), { className: "empty-result", textContent: "填入份数和估值后显示情景" })]));
+
+        const isExample = fields.every((field) => field.type === "number"
+          ? Number(field.value || 0) === example[field.dataset.key]
+          : field.value === example[field.dataset.key]);
+        document.querySelector("#example-tag").textContent = isExample ? "示例方案" : hasAnyCompensation ? "当前方案" : "待填写";
+      }
+
+      function restoreExample() {
+        for (const field of fields) field.value = example[field.dataset.key];
+        update();
+      }
+
+      async function copyResults() {
+        const status = document.querySelector("#copy-status");
+        if (number("monthlySalary") <= 0) {
+          status.textContent = "先填税前月薪";
+          return;
+        }
+        const result = [
+          `税后月均到手：${document.querySelector("#monthly-net").textContent}`,
+          `税后年现金：${document.querySelector("#steady-net").textContent}`,
+          `首年税后现金：${document.querySelector("#first-year-net").textContent}`,
+          `年化税前总包：${document.querySelector("#annual-total").textContent}`,
+          `首年税前总额：${document.querySelector("#first-year-total").textContent}`,
+          "以上为薪酬估算，实际金额以工资单及个税申报为准"
+        ].join("\n");
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+          await navigator.clipboard.writeText(result);
+          status.textContent = "已复制";
+        } catch (_) {
+          const buffer = document.createElement("textarea");
+          buffer.value = result;
+          buffer.setAttribute("readonly", "");
+          buffer.style.position = "fixed";
+          buffer.style.opacity = "0";
+          document.body.append(buffer);
+          buffer.select();
+          let copied = false;
+          try { copied = document.execCommand("copy"); } catch (_) { copied = false; }
+          buffer.remove();
+          status.textContent = copied ? "已复制" : "复制失败，请手动记录";
+        }
+        window.setTimeout(() => { status.textContent = ""; }, 2400);
+      }
+
+      function clearForm() {
+        for (const field of fields) field.value = empty[field.dataset.key];
+      document.querySelectorAll("details.advanced").forEach((detail) => { detail.open = false; });
+        update();
+      }
+
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem("salary-ledger-v2") || "null");
+        if (saved && typeof saved === "object") {
+          for (const field of fields) {
+            if (Object.prototype.hasOwnProperty.call(saved, field.dataset.key)) field.value = saved[field.dataset.key];
+          }
+          if (!Object.prototype.hasOwnProperty.call(saved, "annualBonus") && Object.prototype.hasOwnProperty.call(saved, "bonusMonths")) {
+            const oldBonus = Number(saved.monthlySalary || 0) * Number(saved.bonusMonths || 0) * Number(saved.bonusPayout ?? 100) / 100;
+            fieldFor("annualBonus").value = oldBonus || "";
+          }
+        }
+      } catch (_) { /* 本地示例值作为初始内容 */ }
+
+      fields.forEach((field) => field.addEventListener(field.tagName === "SELECT" ? "change" : "input", update));
+      document.querySelector("#reset-button").addEventListener("click", restoreExample);
+      document.querySelector("#clear-button").addEventListener("click", clearForm);
+      document.querySelector("#copy-results").addEventListener("click", copyResults);
+      update();
+    })();
+  </script>
+</body>
+</html>
