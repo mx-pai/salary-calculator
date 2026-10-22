@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f2f5f6">
-  <meta name="description" content="在线薪资计算器，估算税后工资、月均到手、年终奖、首年收入和期权归属。支持社保、公积金及个税参数自定义，数据保存在本地浏览器。">
+  <meta name="theme-color" content="#f6f6fa">
+  <meta name="description" content="在线薪资计算器，按月薪和年终奖月数，估算税后工资、全年收入、首年现金和期权归属。支持社保、公积金及个税参数自定义，数据保存在本地浏览器。">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:title" content="薪资计算器 - 税后工资、年终奖与期权估算">
@@ -16,1217 +16,181 @@
   <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
   </script>
-  <style>
-    @font-face {
-      font-family: "Plex Sub";
-      src: url(fonts/plex-sans-subset.woff2) format("woff2");
-      font-weight: 100 700;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: "Noto Sub";
-      src: url(fonts/noto-sans-sc-subset.woff2) format("woff2");
-      font-weight: 100 900;
-      font-display: swap;
-    }
-
-    :root {
-      color-scheme: light;
-      /* 版面 */
-      --page: #edf2f3;
-      --paper: #fff;
-      --paper-warm: #f8f8f2;
-      --ink: #1b303b;
-      --ink-soft: #405763;
-      --muted: #5b6f7b;
-      --placeholder: #64777f;
-      /* 描边与填充 */
-      --line: #d8e2e5;
-      --line-soft: #e9eff0;
-      --border: #c8d5d9;
-      --border-strong: #8fa7ad;
-      --field-bg: #fbfcfc;
-      --hover-bg: #f8fbfb;
-      /* 数据色 */
-      --cash: #197e76;
-      --cash-dark: #126c65;
-      --equity: #bb842f;
-      --equity-dark: #b99258;
-      --signon: #7a8b93;
-      /* 单据抬头 */
-      --hero: #103e32;
-      --hero-raised: #194b3d;
-      --hero-ink: #f2f3e9;
-      --hero-soft: #c3d3ca;
-      --hero-border: #7c9b8d;
-      --hero-border-hover: #c4d8ca;
-      --accent: #d8e794;
-      --accent-hover: #e4f0b2;
-      --accent-ink: #173d32;
-      --chip-ink: #dbe8ab;
-      /* 状态 */
-      --danger: #a8432c;
-      --danger-line: #c0654c;
-      --danger-bg: #fdf3f0;
-      --danger-bg-hover: #fbe9e3;
-      --focus-halo: #73a8d4;
-      /* 字重：只保留四档。可变字体上这四档都有真实字形，
-         字体加载失败回落 PingFang / 雅黑时同样落在真实档位上 */
-      --w-body: 400;
-      --w-label: 500;
-      --w-title: 600;
-      --w-display: 700;
-      --radius: 8px;
-      font-family: "Plex Sub", "Noto Sub", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-      font-synthesis: none;
-      text-rendering: optimizeLegibility;
-    }
-
-    * { box-sizing: border-box; }
-    body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--page); color: var(--ink); }
-    button, input, select { font: inherit; }
-    h1, h2, h3, p { margin: 0; }
-
-    .shell { width: min(1560px, calc(100% - 64px)); margin: 0 auto; padding: 36px 0 44px; }
-    .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 25px; }
-    h1 { font-size: clamp(30px, 3vw, 38px); font-weight: var(--w-display); line-height: 1.17; }
-    .intro { margin-top: 9px; color: var(--muted); font-size: 15px; line-height: 1.55; }
-    .mast-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 11px; }
-    .local-note { color: var(--muted); font-size: 12px; }
-    .action-buttons { display: flex; gap: 9px; }
-
-    .text-button, .copy-button {
-      min-height: 40px;
-      padding: 0 15px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--paper);
-      color: var(--ink);
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: var(--w-title);
-      transition: border-color .16s ease, background-color .16s ease, transform .08s ease;
-    }
-    .text-button:active, .copy-button:active { transform: translateY(1px); }
-    .text-button:hover, .copy-button:hover { border-color: var(--border-strong); background: var(--hover-bg); }
-    .text-button#reset-button { border-color: var(--cash); background: var(--cash); color: var(--paper); }
-    .text-button#reset-button:hover { border-color: var(--cash-dark); background: var(--cash-dark); }
-    .text-button#clear-button.is-confirming { border-color: var(--danger-line); background: var(--danger-bg); color: var(--danger); }
-    .text-button#clear-button.is-confirming:hover { border-color: var(--danger); background: var(--danger-bg-hover); }
-    .text-button:focus-visible, .copy-button:focus-visible, input:focus-visible, select:focus-visible {
-      outline: 3px solid var(--focus-halo);
-      outline-offset: 2px;
-    }
-
-    .layout { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr); align-items: start; gap: 22px; }
-    .form-panel, .result-panel { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
-    .form-panel { overflow: hidden; }
-    .form-section { padding: 25px 27px; }
-    .form-section + .form-section { border-top: 1px solid var(--line-soft); }
-    .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
-    .section-heading h2 { font-size: 18px; font-weight: var(--w-title); }
-    .section-heading span { color: var(--muted); font-size: 12px; }
-
-    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 18px; }
-    .field { min-width: 0; }
-    .field.wide { grid-column: 1 / -1; }
-    .field label { display: block; margin-bottom: 7px; color: var(--ink-soft); font-size: 13px; font-weight: var(--w-title); }
-    .entry { display: flex; min-height: 48px; align-items: center; padding: 0 13px; border: 1px solid var(--border); border-radius: 6px; background: var(--field-bg); transition: border-color .16s ease, background-color .16s ease; }
-    .entry:focus-within { border-color: var(--cash); background: var(--paper); }
-    .entry input, .entry select { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); }
-    .entry input { font-size: 17px; font-weight: var(--w-label); font-variant-numeric: tabular-nums; }
-    .entry input::placeholder { color: var(--placeholder); font-size: 13px; font-weight: var(--w-body); }
-    .entry select { cursor: pointer; font-size: 14px; }
-    .entry input::-webkit-inner-spin-button, .entry input::-webkit-outer-spin-button { margin: 0; appearance: none; }
-    .entry input[type="number"] { appearance: textfield; }
-    .unit { flex: 0 0 auto; margin-left: 9px; color: var(--muted); font-size: 12px; }
-    .hint { margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.45; }
-    .section-tip { margin-top: 15px; color: var(--muted); font-size: 12px; line-height: 1.55; }
-
-    .tax-explainer { margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 11px; line-height: 1.7; }
-    .tax-explainer a { color: var(--cash); text-underline-offset: 2px; }
-
-    .result-panel {
-      position: sticky;
-      top: 18px;
-      max-height: calc(100vh - 36px);
-      overflow-x: hidden;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-gutter: stable;
-      background: var(--paper-warm);
-    }
-    .result-top { padding: 0 27px 22px; }
-    .result-hero { position: relative; margin: 0 -27px; padding: 24px 27px 25px; overflow: hidden; border-bottom: 2px solid var(--equity-dark); background: var(--hero); color: var(--hero-ink); }
-    .result-label { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-    .result-label h2 { font-size: 17px; font-weight: var(--w-title); }
-    .example-tag { padding: 3px 9px; border: 1px solid rgba(216, 231, 148, .34); border-radius: 4px; background: rgba(216, 231, 148, .14); color: var(--chip-ink); font-size: 11px; }
-    .assumption-option { display: flex; align-items: flex-start; gap: 11px; margin-top: 15px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
-    .assumption-option input { width: 17px; height: 17px; flex: 0 0 17px; margin: 2px 0 0; accent-color: var(--cash); }
-    .assumption-option strong, .assumption-option small { display: block; }
-    .assumption-option strong { font-size: 13px; font-weight: var(--w-title); }
-    .assumption-option small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.5; }
-    .net-label { margin-top: 22px; color: var(--hero-soft); font-size: 13px; }
-    .total { margin-top: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .total.net-total { color: var(--accent); font-size: clamp(39px, 4vw, 49px); font-weight: var(--w-display); line-height: 1.17; }
-    .total.net-total.is-pending { color: var(--hero-soft); font-size: 23px; font-weight: var(--w-label); }
-    .total-caption { min-height: 34px; margin-top: 7px; color: var(--hero-soft); font-size: 12px; line-height: 1.55; }
-    .net-secondary { margin: 6px 0 0; color: var(--hero-soft); font-size: 12px; font-variant-numeric: tabular-nums; }
-    /* 主数字每次按键都变，不能是 live region：读屏会跟着敲键一路复读。
-       改由这个隐藏节点在停止输入后播报一次 */
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-    .result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
-    .copy-button { border-color: var(--hero-border); background: transparent; color: var(--hero-ink); }
-    .copy-button:hover { border-color: var(--hero-border-hover); background: var(--hero-raised); }
-    #copy-image { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
-    #copy-image:hover { border-color: var(--accent-hover); background: var(--accent-hover); }
-    #action-status { color: var(--hero-soft); font-size: 11px; }
-
-    .result-kpis { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; border-bottom: 1px solid var(--line); }
-    .result-kpis > div { padding: 14px 14px 14px 0; }
-    .result-kpis > div + div { padding-left: 17px; border-left: 1px solid var(--line); }
-    .result-kpis span { display: block; color: var(--muted); font-size: 11px; }
-    .result-kpis strong { display: block; margin-top: 5px; color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
-
-    .mix-heading { display: flex; justify-content: space-between; gap: 12px; margin-top: 19px; color: var(--muted); font-size: 11px; }
-    .mix-heading span:last-child { color: var(--muted); }
-    .splitbar { display: flex; width: 100%; height: 8px; margin: 9px 0 18px; overflow: hidden; border-radius: 1px; background: var(--line-soft); }
-    .splitbar .cash-fill { background: var(--cash); }
-    .splitbar .equity-fill { background: var(--equity); }
-    .splitbar .cash-fill, .splitbar .equity-fill { transition: width .18s ease; }
-    .breakdown { display: grid; gap: 0; }
-    /* 单据行：项目名与金额之间用点线引导线拉通，行与行之间不再画实线。
-       dotted 的点距由浏览器决定（规范未定义），所以只把它当视觉语言，不做像素级对齐，
-       也不给它做生长动画——scaleX 会把点拉成椭圆 */
-    .breakdown-row { display: flex; align-items: baseline; gap: 10px; color: var(--muted); font-size: 12px; }
-    .breakdown-row + .breakdown-row { margin-top: 11px; }
-    /* 点线引导线的点距用背景点阵控制：border 的 dotted 点距是规范未定义的、各浏览器不一，
-       实测在 2x 下过稀；这里固定 4px 点距，与导出的虚线一致 */
-    .leader {
-      flex: 1 1 auto;
-      min-width: 10px;
-      height: 2px;
-      background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 1.3px);
-      background-repeat: repeat-x;
-      background-position: left bottom;
-      background-size: 4px 2px;
-    }
-    .breakdown-row strong { flex: 0 0 auto; color: var(--ink); font-size: 13px; font-weight: var(--w-title); font-variant-numeric: tabular-nums; text-align: right; }
-    /* 合计：2px 实线 + 加重文字。不用 double——它的两条线共享 border-width，细宽会塌成一条 */
-    .result-divider { height: 2px; margin: 18px 0 14px; background: var(--line); }
-    .first-year { display: flex; align-items: baseline; gap: 10px; color: var(--ink-soft); font-size: 12px; font-weight: var(--w-label); }
-    .first-year strong { flex: 0 0 auto; margin-left: auto; color: var(--cash); font-size: 15px; font-weight: var(--w-title); font-variant-numeric: tabular-nums; text-align: right; }
-    .gross-first-year { margin-top: 11px; }
-
-    .result-more { border-top: 1px solid var(--line); }
-    .timeline { padding: 20px 27px 22px; }
-    .timeline-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 15px; }
-    .timeline-head h2 { font-size: 14px; font-weight: var(--w-title); }
-    .timeline-head span { color: var(--muted); font-size: 11px; }
-    .year-list { display: grid; gap: 14px; }
-    .year-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 11px; }
-    .year-name { color: var(--muted); font-size: 11px; white-space: nowrap; }
-    .year-total { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .year-track { display: flex; min-width: 0; height: 7px; overflow: hidden; border-radius: 3px; background: var(--line-soft); }
-    .year-track span { height: 100%; }
-    .year-cash { background: var(--cash); }
-    .year-equity { background: var(--equity); }
-    .year-sign-on { background: var(--signon); }
-    .timeline-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 17px; color: var(--muted); font-size: 11px; }
-    .legend { display: inline-flex; align-items: center; gap: 6px; }
-    .swatch { width: 8px; height: 8px; flex: 0 0 8px; background: var(--cash); }
-    .swatch.equity { background: var(--equity); }
-    .swatch.sign-on { background: var(--signon); }
-    .total-four-year { margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; }
-
-    .scenario-box { padding: 0 27px 23px; }
-    .scenario-head { display: flex; align-items: baseline; justify-content: space-between; gap: 13px; margin-bottom: 11px; }
-    .scenario-head h2 { font-size: 13px; font-weight: var(--w-title); }
-    .scenario-head span { color: var(--muted); font-size: 11px; }
-    .scenario-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .scenario { padding: 9px 10px 9px 0; border-top: 1px solid var(--line); }
-    .scenario span { display: block; color: var(--muted); font-size: 11px; }
-    .scenario strong { display: block; margin-top: 6px; color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
-    .empty-result { color: var(--muted); font-size: 12px; line-height: 1.5; }
-    .tax-breakdown { margin-top: 14px; }
-    .footer { display: flex; justify-content: space-between; gap: 22px; margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
-    .footer span:last-child { white-space: nowrap; }
-
-    @media (max-width: 920px) {
-      .layout { grid-template-columns: minmax(0, 1fr); }
-      /* 右栏落到表单下方后不再跟随滚动，内层滚动区必须撤掉，
-         否则短屏手机上是「页面里再套一个滚动区」 */
-      .result-panel { position: static; max-height: none; overflow: visible; scrollbar-gutter: auto; }
-    }
-
-    @media (max-width: 560px) {
-      .shell { width: calc(100% - 30px); padding: 22px 0 30px; }
-      .masthead { align-items: flex-start; flex-direction: column; gap: 14px; margin-bottom: 18px; }
-      .mast-actions { width: 100%; align-items: center; flex-direction: row; justify-content: space-between; gap: 9px; }
-      .text-button { min-height: 37px; padding: 0 10px; font-size: 12px; }
-      .layout { gap: 13px; }
-      .form-section { padding: 19px 16px; }
-      .section-heading { align-items: flex-start; flex-direction: column; gap: 5px; margin-bottom: 15px; }
-      .fields { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-      .field.wide { grid-column: auto; }
-      .result-top { padding: 0 17px 19px; }
-      .result-hero { margin-right: -17px; margin-left: -17px; padding: 20px 17px 21px; }
-      .total.net-total { font-size: 39px; }
-      .result-kpis > div { padding-right: 8px; }
-      .result-kpis > div + div { padding-left: 10px; }
-      .timeline { padding-right: 17px; padding-left: 17px; }
-      .scenario-box { padding-right: 17px; padding-left: 17px; }
-      .scenario-list { gap: 8px; }
-      .scenario { padding-right: 4px; }
-      .footer { flex-direction: column; gap: 4px; }
-      .footer span:last-child { white-space: normal; }
-    }
-
-    /* 放在样式表末尾：同特异性时后者胜出，不需要 !important。
-       减弱而不是全删——保留颜色过渡，去掉位移 */
-    @media (prefers-reduced-motion: reduce) {
-      .text-button,
-      .copy-button,
-      .entry,
-      .splitbar .cash-fill,
-      .splitbar .equity-fill { transition: none; }
-      .text-button:active,
-      .copy-button:active { transform: none; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css?v=20261022c">
 </head>
 <body>
   <main class="shell">
     <header class="masthead">
-      <div>
-        <h1>薪资计算器</h1>
-        <p class="intro">比较税后现金、年终奖、首年条件与期权归属</p>
-      </div>
-      <div class="mast-actions">
-        <span class="local-note" id="storage-note">输入保存在此浏览器</span>
-        <div class="action-buttons">
-          <button class="text-button" id="clear-button" type="button">清空输入</button>
-          <button class="text-button" id="reset-button" type="button">载入示例</button>
-        </div>
-      </div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M6 20 16 25 26 20M6 13 16 18 26 13M6 6 16 11 26 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>薪资计算器</h1><p class="intro">月薪、奖金、股权，一起算清楚</p></div></div>
+      <div class="mast-actions"><span class="local-note" id="storage-note">输入保存在此浏览器</span><div class="action-buttons"><button class="text-button" id="clear-button" type="button">清空输入</button><button class="text-button" id="reset-button" type="button">载入示例</button></div></div>
     </header>
-
+    <noscript><p class="validation-summary">请启用 JavaScript 后使用薪资计算器</p></noscript>
     <div class="layout">
-      <section class="form-panel" aria-label="薪酬方案输入">
-        <div class="form-section">
-          <div class="section-heading">
-            <h2>一、工资与奖金</h2>
-            <span>月薪为税前金额</span>
+      <section class="primary-form" aria-labelledby="salary-title">
+        <div class="section-heading"><h2 id="salary-title">你的薪酬</h2><span>填写税前金额</span></div>
+        <div class="validation-summary" id="income-errors" role="alert" hidden></div>
+        <div class="fields">
+<div class="field">
+      <label for="monthly-salary">税前月薪</label>
+      <div class="entry"><input id="monthly-salary" data-key="monthlySalary" type="number" min="0" step="100" inputmode="decimal" placeholder="例如 28000" aria-describedby="error-monthlySalary"><span class="unit">元</span></div>
+      <p class="field-error" id="error-monthlySalary" data-error-for="monthlySalary" hidden></p>
+    </div><div class="field">
+      <label for="salary-months">固定发薪月数</label>
+      <div class="entry"><input id="salary-months" data-key="salaryMonths" type="number" min="0" step="0.5" max="24" inputmode="decimal" placeholder="12" aria-describedby="error-salaryMonths"><span class="unit">个月</span></div>
+      <p class="field-error" id="error-salaryMonths" data-error-for="salaryMonths" hidden></p>
+    </div>
+          <div class="bonus-block">
+            <div class="bonus-header"><span>年终奖</span><div class="bonus-switch" role="group" aria-label="年终奖填写方式"><button type="button" data-bonus-mode="months" aria-pressed="true">按月数</button><button type="button" data-bonus-mode="amount" aria-pressed="false">按金额</button></div></div>
+            <input id="bonus-input-mode" data-key="bonusMode" type="hidden" value="months">
+            <div class="bonus-fields"><div data-bonus-panel="months"><div class="field">
+      <label for="bonus-months">年终奖月数</label>
+      <div class="entry"><input id="bonus-months" data-key="bonusMonths" type="number" min="0" step="0.5" max="36" inputmode="decimal" placeholder="例如 3" aria-describedby="error-bonusMonths"><span class="unit">个月</span></div>
+      <p class="field-error" id="error-bonusMonths" data-error-for="bonusMonths" hidden></p>
+    </div></div><div data-bonus-panel="amount" hidden><div class="field">
+      <label for="annual-bonus">年终奖税前金额</label>
+      <div class="entry"><input id="annual-bonus" data-key="annualBonus" type="number" min="0" step="1000" inputmode="decimal" placeholder="例如 84000" aria-describedby="error-annualBonus"><span class="unit">元 / 年</span></div>
+      <p class="field-error" id="error-annualBonus" data-error-for="annualBonus" hidden></p>
+    </div></div><div class="bonus-equivalent"><span id="bonus-equivalent-label">税前金额</span><strong id="bonus-equivalent">¥0</strong><small id="bonus-expression">随月薪自动换算</small></div></div>
+            <p class="hint">约定的 13 薪计入固定发薪月数，额外年终奖在这里填写</p>
           </div>
-          <div class="fields">
-            <div class="field">
-              <label for="monthly-salary">税前月薪</label>
-              <div class="entry"><input id="monthly-salary" data-key="monthlySalary" type="number" min="0" step="100" inputmode="decimal" placeholder="例如 28000"><span class="unit">元</span></div>
-            </div>
-            <div class="field">
-              <label for="salary-months">固定工资月数</label>
-              <div class="entry"><input id="salary-months" data-key="salaryMonths" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="12"><span class="unit">个月</span></div><p class="hint">默认 12 个月，可按 offer 修改</p>
-            </div>
-            <div class="field">
-              <label for="annual-bonus">年终奖税前总额</label>
-              <div class="entry"><input id="annual-bonus" data-key="annualBonus" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元 / 年</span></div>
-            </div>
-            <div class="field">
-              <label for="annual-allowance">年度现金补贴</label>
-              <div class="entry"><input id="annual-allowance" data-key="annualAllowance" type="number" min="0" step="100" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元 / 年</span></div>
-            </div>
-          </div>
-          <p class="section-tip">固定工资月数包含 13 薪；年终奖填写预计发放的税前金额</p>
         </div>
-
-        <section class="form-section">
-          <div class="section-heading">
-            <h2>二、签字费与首年条件</h2>
-            <span>入职月份、试用期、分期和追回风险</span>
-          </div>
-          <div class="fields">
-            <div class="field">
-              <label for="sign-on-year1">签字费首年发放</label>
-              <div class="entry"><input id="sign-on-year1" data-key="signOnYear1" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元</span></div>
-            </div>
-            <div class="field">
-              <label for="first-year-months">首年在职月数</label>
-              <div class="entry"><input id="first-year-months" data-key="firstYearMonths" type="number" min="0" max="12" step="1" inputmode="numeric" value="12"><span class="unit">个月</span></div>
-            </div>
-            <div class="field">
-              <label for="probation-months">试用期月数</label>
-              <div class="entry"><input id="probation-months" data-key="probationMonths" type="number" min="0" max="12" step="1" inputmode="numeric" value="0"><span class="unit">个月</span></div>
-            </div>
-            <div class="field">
-              <label for="probation-rate">试用期薪资比例</label>
-              <div class="entry"><input id="probation-rate" data-key="probationRate" type="number" min="0" max="100" step="1" inputmode="decimal" value="100"><span class="unit">%</span></div>
-            </div>
-            <div class="field">
-              <label for="sign-on-year2">签字费次年发放</label>
-              <div class="entry"><input id="sign-on-year2" data-key="signOnYear2" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">元</span></div>
-            </div>
-            <div class="field wide">
-              <label for="sign-on-reserve">首年追回风险预留</label>
-              <div class="entry"><input id="sign-on-reserve" data-key="signOnReserve" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">税后现金元</span></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="form-section">
-          <div class="section-heading">
-            <h2>三、社保、公积金与个税</h2>
-            <span>关闭常见估算后填写四项缴费参数</span>
-          </div>
-          <div class="fields">
-              <div class="field">
-                <label for="social-base">社保缴费基数</label>
-                <div class="entry"><input id="social-base" data-key="socialBase" type="number" min="0" step="100" inputmode="decimal" placeholder="常见值：月薪"><span class="unit">元 / 月</span></div>
-              </div>
-              <div class="field">
-                <label for="social-rate">社保个人比例</label>
-                <div class="entry"><input id="social-rate" data-key="socialRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="常见值：10.5"><span class="unit">%</span></div>
-              </div>
-              <div class="field">
-                <label for="social-floor">社保基数下限</label>
-                <div class="entry"><input id="social-floor" data-key="socialFloor" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
-              </div>
-              <div class="field">
-                <label for="social-ceiling">社保基数上限</label>
-                <div class="entry"><input id="social-ceiling" data-key="socialCeiling" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
-              </div>
-              <div class="field">
-                <label for="housing-base">公积金缴费基数</label>
-                <div class="entry"><input id="housing-base" data-key="housingBase" type="number" min="0" step="100" inputmode="decimal" placeholder="常见值：月薪"><span class="unit">元 / 月</span></div>
-              </div>
-              <div class="field">
-                <label for="housing-rate">公积金个人比例</label>
-                <div class="entry"><input id="housing-rate" data-key="housingRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="常见值：7"><span class="unit">%</span></div>
-              </div>
-              <div class="field">
-                <label for="housing-floor">公积金基数下限</label>
-                <div class="entry"><input id="housing-floor" data-key="housingFloor" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
-              </div>
-              <div class="field">
-                <label for="housing-ceiling">公积金基数上限</label>
-                <div class="entry"><input id="housing-ceiling" data-key="housingCeiling" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
-              </div>
-              <div class="field">
-                <label for="special-deduction">年度专项附加扣除</label>
-                <div class="entry"><input id="special-deduction" data-key="specialDeduction" type="number" min="0" step="1000" inputmode="decimal" placeholder="空白按 0 元"><span class="unit">元 / 年</span></div>
-              </div>
-              <div class="field">
-                <label for="bonus-tax-mode">年终奖计税方式</label>
-                <div class="entry"><select id="bonus-tax-mode" data-key="bonusTaxMode"><option value="auto">自动比较</option><option value="combined">并入综合所得</option><option value="separate">单独计税</option></select></div>
-              </div>
-            </div>
-            <p class="tax-explainer">空白缴费参数须先选择右侧常见估算；选择后，<span id="tax-explainer-rates">基数按月薪、社保个人比例按 10.5%、公积金按 7%</span>，已填写的项目会覆盖常见值；填了基数上下限时，按月薪推算的基数会被约束在该区间内。专项附加扣除空白按 0 元估算。税额按居民个人年度综合所得计算，实际预扣和汇算以工资单及申报为准；全年一次性奖金单独计税仅适用于符合条件的收入，<a href="https://www.chinatax.gov.cn/n810219/n810744/n3752930/n3752974/c3970366/content.html" target="_blank" rel="noreferrer">查看税务总局税法说明</a></p>
-        </section>
-
-        <section class="form-section">
-          <div class="section-heading">
-            <h2>四、期权与股票</h2>
-            <span>归属节奏、行权价和估值情景</span>
-          </div>
-          <div class="fields">
-            <div class="field">
-              <label for="equity-units">授予总份数</label>
-              <div class="entry"><input id="equity-units" data-key="equityUnits" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有就填 0"><span class="unit">份</span></div>
-            </div>
-            <div class="field">
-              <label for="vesting-years">归属周期</label>
-              <div class="entry"><input id="vesting-years" data-key="vestingYears" type="number" min="0.25" max="20" step="0.25" inputmode="decimal" value="4"><span class="unit">年</span></div>
-            </div>
-            <div class="field">
-              <label for="cliff-months">首期等待期</label>
-              <div class="entry"><input id="cliff-months" data-key="cliffMonths" type="number" min="0" max="120" step="1" inputmode="numeric" value="12"><span class="unit">个月</span></div>
-            </div>
-            <div class="field">
-              <label for="strike-price">行权价</label>
-              <div class="entry"><input id="strike-price" data-key="strikePrice" type="number" min="0" step="0.1" inputmode="decimal" placeholder="RSU 填 0"><span class="unit">元 / 份</span></div>
-            </div>
-            <div class="field">
-              <label for="share-low">低位估值</label>
-              <div class="entry"><input id="share-low" data-key="shareLow" type="number" min="0" step="0.1" inputmode="decimal" placeholder="元 / 份"><span class="unit">元 / 份</span></div>
-            </div>
-            <div class="field">
-              <label for="share-base">基准估值</label>
-              <div class="entry"><input id="share-base" data-key="shareBase" type="number" min="0" step="0.1" inputmode="decimal" placeholder="元 / 份"><span class="unit">元 / 份</span></div>
-            </div>
-            <div class="field">
-              <label for="share-high">高位估值</label>
-              <div class="entry"><input id="share-high" data-key="shareHigh" type="number" min="0" step="0.1" inputmode="decimal" placeholder="元 / 份"><span class="unit">元 / 份</span></div>
-            </div>
-          </div>
-          <p class="section-tip">股权估值不计入税后现金，未考虑流动性折价和离职失效条件</p>
-        </section>
+        <div class="income-summary"><div><span>全年税前现金</span><strong id="cash-preview">—</strong></div><p id="income-formula">固定工资 + 年终奖 + 现金补贴</p></div>
+        <div class="tax-quick">          <label class="assumption-option" for="use-default-tax"><input id="use-default-tax" data-key="useDefaultTax" type="checkbox"><span><strong>使用常见参数估算到手</strong><small>空白基数按月薪，社保 10.5%、公积金 7%，可逐项调整</small></span></label>
+          <div class="result-note"><p id="assumption-hint">缴费参数待设置，当前展示税前收入</p><button class="view-link" id="edit-tax" type="button">调整参数</button></div>
+</div>
       </section>
 
-      <aside class="result-panel" aria-label="薪酬计算结果">
-        <div class="result-top">
-          <div class="result-hero">
-            <div class="result-label"><h2>薪酬估算单</h2><span class="example-tag" id="example-tag">待填写</span></div>
-            <div class="net-label">税后月均到手</div>
-            <div class="total net-total" id="monthly-net">待填写月薪</div>
-            <p class="net-secondary" id="monthly-with-bonus" hidden></p>
-            <p class="total-caption" id="result-caption">填写税前月薪后开始估算</p>
-            <div class="result-actions">
-              <button class="copy-button" id="copy-results" type="button">复制估算结果</button>
-              <button class="copy-button" id="copy-image" type="button">复制图片</button>
-              <button class="copy-button" id="download-image" type="button">下载 PNG</button>
-              <span id="action-status" role="status" aria-live="polite" aria-atomic="true"></span>
-            </div>
-            <p class="visually-hidden" id="result-announcer" role="status" aria-live="polite" aria-atomic="true"></p>
-          </div>
-          <label class="assumption-option" for="use-default-tax">
-            <input id="use-default-tax" data-key="useDefaultTax" type="checkbox">
-            <span><strong>按常见缴费参数估算</strong><small id="assumption-hint">空白按月薪作基数、社保 10.5%、公积金 7%，专项扣除按 0 元；可逐项修改</small></span>
-          </label>
-          <div class="result-kpis">
-            <div><span>税后年现金</span><strong id="steady-net">—</strong></div>
-            <div><span>年化税前总包</span><strong id="annual-total">—</strong></div>
-          </div>
-          <div class="mix-heading"><span>年度收入组成</span><span>现金与股权估值</span></div>
-          <div class="splitbar" aria-label="现金与股权构成比例">
-            <span class="cash-fill" id="cash-fill"></span>
-            <span class="equity-fill" id="equity-fill"></span>
-          </div>
-          <div class="breakdown">
-            <div class="breakdown-row"><span>稳态年度现金收入</span><i class="leader" aria-hidden="true"></i><strong id="cash-total">—</strong></div>
-            <div class="breakdown-row"><span>年均股权归属估值</span><i class="leader" aria-hidden="true"></i><strong id="equity-total">—</strong></div>
-            <div class="breakdown-row"><span>年度个税估算<span id="bonus-tax-result">（待设置）</span></span><i class="leader" aria-hidden="true"></i><strong id="annual-tax">—</strong></div>
-            <div class="breakdown-row"><span>个人社保与公积金</span><i class="leader" aria-hidden="true"></i><strong id="annual-contribution">—</strong></div>
-          </div>
-          <div class="result-divider"></div>
-          <div class="first-year"><span>首年税后可支配现金</span><strong id="first-year-net">—</strong></div>
-          <div class="first-year gross-first-year"><span>首年税前总包，含股权估值</span><strong id="first-year-total">—</strong></div>
-        </div>
+      <aside class="result-panel" id="results" aria-label="薪酬计算结果">
+        <div class="result-hero">
+          <div class="result-label"><h2>收入概览</h2><span class="example-tag" id="example-tag">待填写</span></div>
+          <div class="net-label" id="headline-label">薪酬概览</div><div class="net-total is-pending" id="monthly-net">先填税前月薪</div>
+          <p class="net-secondary" id="monthly-with-bonus" hidden></p><p class="total-caption" id="result-caption">月薪和奖金填好后，结果会实时更新</p>
 
-        <div class="result-more">
-          <section class="timeline" aria-labelledby="timeline-title">
-            <div class="timeline-head">
-              <h2 id="timeline-title">四年收入与归属</h2>
-              <span>首年按在职月数折算</span>
-            </div>
-            <div class="year-list" id="year-list"></div>
-            <div class="timeline-foot">
-              <span class="legend"><i class="swatch cash"></i>经常性现金</span>
-              <span class="legend"><i class="swatch equity"></i>归属估值</span>
-              <span class="legend"><i class="swatch sign-on"></i>签字费</span>
-              <span class="total-four-year" id="four-year-total"></span>
-            </div>
-          </section>
-          <div class="scenario-box">
-            <div class="scenario-head"><h2 id="scenario-title">股权估值情景</h2><span>年化税前总包</span></div>
-            <div class="scenario-list" id="scenario-list"></div>
-            <div class="tax-breakdown"><div class="breakdown-row"><span class="swatch equity"></span><span>首年预计行权资金</span><i class="leader" aria-hidden="true"></i><strong id="exercise-cost">—</strong></div></div>
-          </div>
+          <p class="visually-hidden" id="result-announcer" role="status" aria-live="polite" aria-atomic="true"></p>
+          <div class="result-kpis" id="result-kpis"></div>
         </div>
+        <div class="result-body">
+          <div class="mix-heading"><h3>全年收入构成</h3><span>税前</span></div><div class="splitbar" aria-label="现金与股权构成比例"><span class="cash-fill" id="cash-fill"></span><span class="equity-fill" id="equity-fill"></span></div>
+          <div id="income-breakdown"></div><div class="deductions" id="deduction-breakdown"></div>
+          <div class="first-year-group" id="first-year-results"></div>
+        </div>
+        <div class="result-actions"><button class="copy-button" id="copy-results" type="button" disabled>复制文字</button><button class="copy-button" id="copy-image" type="button" disabled><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><rect x="6" y="6" width="10" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M12 6V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h2" stroke="currentColor" stroke-width="1.5"/></svg>复制图片</button><button class="copy-button" id="download-image" type="button" disabled>下载图片</button><span id="action-status" role="status" aria-live="polite" aria-atomic="true"></span></div>
+        <details class="result-more"><summary>查看四年收入与股权估值<span class="disclosure" aria-hidden="true">⌄</span></summary>
+          <section class="timeline" aria-labelledby="timeline-title"><div class="timeline-head"><h3 id="timeline-title">四年收入与归属</h3><span>首年按在职月数折算</span></div><div class="year-list" id="year-list"></div><div class="timeline-foot"><span class="legend"><i class="swatch"></i>经常性现金</span><span class="legend"><i class="swatch equity"></i>归属估值</span><span class="legend"><i class="swatch sign-on"></i>签字费</span><span class="total-four-year" id="four-year-total"></span></div></section>
+          <div class="scenario-box"><div class="scenario-head"><h3>股权估值情景</h3><span>年化税前总包</span></div><div class="scenario-list" id="scenario-list"></div><div class="tax-breakdown first-year"><span>首年预计行权资金</span><strong id="exercise-cost">—</strong></div></div>
+        </details>
       </aside>
+
+      <div class="optional-group" aria-label="其他薪酬条件">
+        <details class="optional-section" id="tax-settings">
+          <summary><div><h2>社保、公积金与个税</h2><p id="tax-settings-summary">设置后显示税后到手</p></div><span class="disclosure" aria-hidden="true">⌄</span></summary>
+          <div class="optional-body"><div class="validation-summary" id="tax-errors" role="alert" hidden></div><div class="fields"><div class="field">
+      <label for="social-base">社保缴费基数</label>
+      <div class="entry"><input id="social-base" data-key="socialBase" type="number" min="0" step="100" inputmode="decimal" placeholder="空白按月薪" aria-describedby="error-socialBase"><span class="unit">元 / 月</span></div>
+      <p class="field-error" id="error-socialBase" data-error-for="socialBase" hidden></p>
+    </div><div class="field">
+      <label for="social-rate">社保个人比例</label>
+      <div class="entry"><input id="social-rate" data-key="socialRate" type="number" min="0" step="0.1" max="30" inputmode="decimal" placeholder="常见值 10.5" aria-describedby="error-socialRate"><span class="unit">%</span></div>
+      <p class="field-error" id="error-socialRate" data-error-for="socialRate" hidden></p>
+    </div><div class="field">
+      <label for="housing-base">公积金缴费基数</label>
+      <div class="entry"><input id="housing-base" data-key="housingBase" type="number" min="0" step="100" inputmode="decimal" placeholder="空白按月薪" aria-describedby="error-housingBase"><span class="unit">元 / 月</span></div>
+      <p class="field-error" id="error-housingBase" data-error-for="housingBase" hidden></p>
+    </div><div class="field">
+      <label for="housing-rate">公积金个人比例</label>
+      <div class="entry"><input id="housing-rate" data-key="housingRate" type="number" min="0" step="0.1" max="30" inputmode="decimal" placeholder="常见值 7" aria-describedby="error-housingRate"><span class="unit">%</span></div>
+      <p class="field-error" id="error-housingRate" data-error-for="housingRate" hidden></p>
+    </div></div>
+            <details class="bounds-settings" id="bounds-settings"><summary>设置自动推算基数的上下限</summary><div class="fields"><div class="field">
+      <label for="social-floor">社保基数下限</label>
+      <div class="entry"><input id="social-floor" data-key="socialFloor" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限" aria-describedby="error-socialFloor"><span class="unit">元 / 月</span></div>
+      <p class="field-error" id="error-socialFloor" data-error-for="socialFloor" hidden></p>
+    </div><div class="field">
+      <label for="social-ceiling">社保基数上限</label>
+      <div class="entry"><input id="social-ceiling" data-key="socialCeiling" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限" aria-describedby="error-socialCeiling"><span class="unit">元 / 月</span></div>
+      <p class="field-error" id="error-socialCeiling" data-error-for="socialCeiling" hidden></p>
+    </div><div class="field">
+      <label for="housing-floor">公积金基数下限</label>
+      <div class="entry"><input id="housing-floor" data-key="housingFloor" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限" aria-describedby="error-housingFloor"><span class="unit">元 / 月</span></div>
+      <p class="field-error" id="error-housingFloor" data-error-for="housingFloor" hidden></p>
+    </div><div class="field">
+      <label for="housing-ceiling">公积金基数上限</label>
+      <div class="entry"><input id="housing-ceiling" data-key="housingCeiling" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限" aria-describedby="error-housingCeiling"><span class="unit">元 / 月</span></div>
+      <p class="field-error" id="error-housingCeiling" data-error-for="housingCeiling" hidden></p>
+    </div></div><p class="section-tip">上下限用于按月薪自动推算基数，已手填的缴费基数优先</p></details>
+            <div class="fields"><div class="field">
+      <label for="special-deduction">年度专项附加扣除</label>
+      <div class="entry"><input id="special-deduction" data-key="specialDeduction" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-specialDeduction"><span class="unit">元 / 年</span></div>
+      <p class="field-error" id="error-specialDeduction" data-error-for="specialDeduction" hidden></p>
+    </div><div class="field"><label for="bonus-tax-mode">年终奖计税方式</label><div class="entry"><select id="bonus-tax-mode" data-key="bonusTaxMode"><option value="auto">自动比较</option><option value="combined">并入综合所得</option><option value="separate">单独计税</option></select></div></div></div>
+            <p class="tax-explainer">勾选常见参数后，空白基数按月薪、社保比例按 10.5%、公积金按 7%；填写的项目会覆盖常见值。全年一次性奖金单独计税适用于符合条件的收入，<a href="https://www.chinatax.gov.cn/n810219/n810744/n3752930/n3752974/c3970366/content.html" target="_blank" rel="noreferrer">查看税法说明</a></p>
+          </div>
+        </details>
+        <details class="optional-section" id="first-year-settings"><summary><div><h2>补贴与首年条件</h2><p id="extras-summary">在职月数、签字费与试用期</p></div><span class="disclosure" aria-hidden="true">⌄</span></summary><div class="optional-body"><div class="fields"><div class="field">
+      <label for="annual-allowance">年度现金补贴</label>
+      <div class="entry"><input id="annual-allowance" data-key="annualAllowance" type="number" min="0" step="100" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-annualAllowance"><span class="unit">元 / 年</span></div>
+      <p class="field-error" id="error-annualAllowance" data-error-for="annualAllowance" hidden></p>
+    </div><div class="field">
+      <label for="first-year-months">首年在职月数</label>
+      <div class="entry"><input id="first-year-months" data-key="firstYearMonths" type="number" min="0" step="1" max="12" inputmode="decimal" placeholder="12" aria-describedby="error-firstYearMonths"><span class="unit">个月</span></div>
+      <p class="field-error" id="error-firstYearMonths" data-error-for="firstYearMonths" hidden></p>
+    </div><div class="field">
+      <label for="sign-on-year1">首年签字费</label>
+      <div class="entry"><input id="sign-on-year1" data-key="signOnYear1" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-signOnYear1"><span class="unit">元</span></div>
+      <p class="field-error" id="error-signOnYear1" data-error-for="signOnYear1" hidden></p>
+    </div><div class="field">
+      <label for="sign-on-year2">次年签字费</label>
+      <div class="entry"><input id="sign-on-year2" data-key="signOnYear2" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-signOnYear2"><span class="unit">元</span></div>
+      <p class="field-error" id="error-signOnYear2" data-error-for="signOnYear2" hidden></p>
+    </div><div class="field">
+      <label for="probation-months">试用期月数</label>
+      <div class="entry"><input id="probation-months" data-key="probationMonths" type="number" min="0" step="1" max="12" inputmode="decimal" placeholder="0" aria-describedby="error-probationMonths"><span class="unit">个月</span></div>
+      <p class="field-error" id="error-probationMonths" data-error-for="probationMonths" hidden></p>
+    </div><div class="field">
+      <label for="probation-rate">试用期薪资比例</label>
+      <div class="entry"><input id="probation-rate" data-key="probationRate" type="number" min="0" step="1" max="100" inputmode="decimal" placeholder="100" aria-describedby="error-probationRate"><span class="unit">%</span></div>
+      <p class="field-error" id="error-probationRate" data-error-for="probationRate" hidden></p>
+    </div><div class="field wide">
+      <label for="sign-on-reserve">首年追回风险预留</label>
+      <div class="entry"><input id="sign-on-reserve" data-key="signOnReserve" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-signOnReserve"><span class="unit">税后元</span></div>
+      <p class="field-error" id="error-signOnReserve" data-error-for="signOnReserve" hidden></p>
+    </div></div><p class="section-tip">首年固定工资、年终奖和补贴按在职月数折算；签字费按填写金额计入</p></div></details>
+        <details class="optional-section" id="equity-settings"><summary><div><h2>期权与股票</h2><p id="equity-summary">按需填写份数、归属和估值</p></div><span class="disclosure" aria-hidden="true">⌄</span></summary><div class="optional-body"><div class="fields"><div class="field">
+      <label for="equity-units">授予总份数</label>
+      <div class="entry"><input id="equity-units" data-key="equityUnits" type="number" min="0" step="1000" inputmode="decimal" placeholder="没有可留空" aria-describedby="error-equityUnits"><span class="unit">份</span></div>
+      <p class="field-error" id="error-equityUnits" data-error-for="equityUnits" hidden></p>
+    </div><div class="field">
+      <label for="vesting-years">归属周期</label>
+      <div class="entry"><input id="vesting-years" data-key="vestingYears" type="number" min="0.25" step="0.25" max="20" inputmode="decimal" placeholder="4" aria-describedby="error-vestingYears"><span class="unit">年</span></div>
+      <p class="field-error" id="error-vestingYears" data-error-for="vestingYears" hidden></p>
+    </div><div class="field">
+      <label for="cliff-months">首期等待期</label>
+      <div class="entry"><input id="cliff-months" data-key="cliffMonths" type="number" min="0" step="1" max="240" inputmode="decimal" placeholder="12" aria-describedby="error-cliffMonths"><span class="unit">个月</span></div>
+      <p class="field-error" id="error-cliffMonths" data-error-for="cliffMonths" hidden></p>
+    </div><div class="field">
+      <label for="strike-price">行权价</label>
+      <div class="entry"><input id="strike-price" data-key="strikePrice" type="number" min="0" step="0.1" inputmode="decimal" placeholder="RSU 填 0" aria-describedby="error-strikePrice"><span class="unit">元 / 份</span></div>
+      <p class="field-error" id="error-strikePrice" data-error-for="strikePrice" hidden></p>
+    </div><div class="field wide">
+      <label for="share-base">基准估值</label>
+      <div class="entry"><input id="share-base" data-key="shareBase" type="number" min="0" step="0.1" inputmode="decimal" placeholder="填入后显示股权估值" aria-describedby="error-shareBase"><span class="unit">元 / 份</span></div>
+      <p class="field-error" id="error-shareBase" data-error-for="shareBase" hidden></p>
+    </div><div class="field">
+      <label for="share-low">低位估值</label>
+      <div class="entry"><input id="share-low" data-key="shareLow" type="number" min="0" step="0.1" inputmode="decimal" placeholder="可选" aria-describedby="error-shareLow"><span class="unit">元 / 份</span></div>
+      <p class="field-error" id="error-shareLow" data-error-for="shareLow" hidden></p>
+    </div><div class="field">
+      <label for="share-high">高位估值</label>
+      <div class="entry"><input id="share-high" data-key="shareHigh" type="number" min="0" step="0.1" inputmode="decimal" placeholder="可选" aria-describedby="error-shareHigh"><span class="unit">元 / 份</span></div>
+      <p class="field-error" id="error-shareHigh" data-error-for="shareHigh" hidden></p>
+    </div></div><p class="section-tip">股权估值单独列示，不计入税后现金</p></div></details>
+      </div>
     </div>
-
-    <footer class="footer">
-      <span>缴费参数按所在城市和工资单调整；到手金额与月度预扣、年度汇算会有差异</span>
-      <span>期权未计流动性折价及离职失效条款</span>
-    </footer>
+    <footer class="footer"><span>按居民个人年度汇算口径估算，实际月度到手以工资单及个税申报为准</span><span>数据保存在当前浏览器</span></footer>
   </main>
-
-  <script>
-    (() => {
-      const storageKey = "mx-pai-salary-calculator-v1";
-      const example = {
-        monthlySalary: 20000,
-        salaryMonths: 13,
-        annualBonus: 20000,
-        annualAllowance: 3000,
-        firstYearMonths: 12,
-        probationMonths: 0,
-        probationRate: 100,
-        signOnYear1: 10000,
-        signOnYear2: 0,
-        signOnReserve: 0,
-        socialBase: 20000,
-        socialRate: 10.5,
-        housingBase: 20000,
-        housingRate: 7,
-        socialFloor: "",
-        socialCeiling: "",
-        housingFloor: "",
-        housingCeiling: "",
-        specialDeduction: 0,
-        useDefaultTax: true,
-        bonusTaxMode: "auto",
-        equityUnits: 10000,
-        vestingYears: 4,
-        cliffMonths: 12,
-        shareLow: 6,
-        shareBase: 12,
-        shareHigh: 18,
-        strikePrice: 4
-      };
-      const empty = {
-        monthlySalary: "",
-        salaryMonths: 12,
-        annualBonus: "",
-        annualAllowance: "",
-        firstYearMonths: 12,
-        probationMonths: 0,
-        probationRate: 100,
-        signOnYear1: "",
-        signOnYear2: "",
-        signOnReserve: "",
-        socialBase: "",
-        socialRate: "",
-        housingBase: "",
-        housingRate: "",
-        socialFloor: "",
-        socialCeiling: "",
-        housingFloor: "",
-        housingCeiling: "",
-        specialDeduction: "",
-        useDefaultTax: false,
-        bonusTaxMode: "auto",
-        equityUnits: "",
-        vestingYears: 4,
-        cliffMonths: 12,
-        shareLow: "",
-        shareBase: "",
-        shareHigh: "",
-        strikePrice: ""
-      };
-      const fields = [...document.querySelectorAll("[data-key]")];
-      const yuan = new Intl.NumberFormat("zh-CN", {
-        style: "currency",
-        currency: "CNY",
-        maximumFractionDigits: 0
-      });
-
-      const fieldFor = (key) => fields.find((item) => item.dataset.key === key);
-      const readField = (field) => field.type === "checkbox" ? field.checked : field.value;
-      const writeField = (field, value) => {
-        if (field.type === "checkbox") field.checked = Boolean(value);
-        else field.value = value ?? "";
-      };
-      const number = (key, fallback = 0) => {
-        const field = fieldFor(key);
-        const value = Number.parseFloat(field?.value ?? "");
-        return Number.isFinite(value) && value >= 0 && field?.value.trim() !== "" ? value : fallback;
-      };
-
-      const money = (value) => yuan.format(Math.round(value || 0));
-      const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
-
-      // 留空 = 不设限。上下限填反了也不崩：取较小的那个当上限
-      const clampBounded = (value, low, high) => {
-        const floor = low > 0 ? low : 0;
-        const ceiling = high > 0 ? Math.max(high, floor) : Infinity;
-        return Math.min(Math.max(value, floor), ceiling);
-      };
-
-      // 页面与导出图共用一处默认值，避免两套口径漂移
-      function contributionDefaults() {
-        const monthly = number("monthlySalary");
-        const useDefault = fieldFor("useDefaultTax").checked;
-        // 只对「按月薪推算」的基数封顶。用户手填了基数就照用户的，不悄悄改数
-        const base = (key, floorKey, ceilingKey) => {
-          if (fieldFor(key).value.trim() !== "") return number(key);
-          if (!useDefault) return 0;
-          return clampBounded(monthly, number(floorKey), number(ceilingKey));
-        };
-        return {
-          socialBase: base("socialBase", "socialFloor", "socialCeiling"),
-          socialRate: number("socialRate", useDefault ? 10.5 : 0),
-          housingBase: base("housingBase", "housingFloor", "housingCeiling"),
-          housingRate: number("housingRate", useDefault ? 7 : 0)
-        };
-      }
-
-      let statusTimer = 0;
-      function setStatus(message) {
-        const status = document.querySelector("#action-status");
-        window.clearTimeout(statusTimer);
-        status.textContent = message;
-        if (message) statusTimer = window.setTimeout(() => { status.textContent = ""; }, 2400);
-      }
-
-      // 主数字不再是 live region，改由这里在停止输入后播报一次
-      let announceTimer = 0;
-      function announceResult(message) {
-        const node = document.querySelector("#result-announcer");
-        window.clearTimeout(announceTimer);
-        announceTimer = window.setTimeout(() => { node.textContent = message; }, 700);
-      }
-
-      function progressiveTax(taxableIncome) {
-        const brackets = [
-          { limit: 36000, rate: 0.03, deduction: 0 },
-          { limit: 144000, rate: 0.10, deduction: 2520 },
-          { limit: 300000, rate: 0.20, deduction: 16920 },
-          { limit: 420000, rate: 0.25, deduction: 31920 },
-          { limit: 660000, rate: 0.30, deduction: 52920 },
-          { limit: 960000, rate: 0.35, deduction: 85920 },
-          { limit: Infinity, rate: 0.45, deduction: 181920 }
-        ];
-        const income = Math.max(0, taxableIncome);
-        const bracket = brackets.find((item) => income <= item.limit);
-        return Math.max(0, income * bracket.rate - bracket.deduction);
-      }
-
-      function separateBonusTax(bonus) {
-        if (bonus <= 0) return 0;
-        const monthlyBonus = bonus / 12;
-        const brackets = [
-          { limit: 3000, rate: 0.03, deduction: 0 },
-          { limit: 12000, rate: 0.10, deduction: 210 },
-          { limit: 25000, rate: 0.20, deduction: 1410 },
-          { limit: 35000, rate: 0.25, deduction: 2660 },
-          { limit: 55000, rate: 0.30, deduction: 4410 },
-          { limit: 80000, rate: 0.35, deduction: 7160 },
-          { limit: Infinity, rate: 0.45, deduction: 15160 }
-        ];
-        const bracket = brackets.find((item) => monthlyBonus <= item.limit);
-        return Math.max(0, bonus * bracket.rate - bracket.deduction);
-      }
-
-      function taxForYear({ salary, bonus, allowance, signOn, contributions, specialDeduction, mode }) {
-        const baseIncome = salary + allowance + signOn;
-        const commonDeductions = 60000 + contributions + specialDeduction;
-        const combinedTax = progressiveTax(baseIncome + bonus - commonDeductions);
-        const separateTax = progressiveTax(baseIncome - commonDeductions) + separateBonusTax(bonus);
-        if (mode === "combined") return { tax: combinedTax, selected: "combined" };
-        if (mode === "separate") return { tax: separateTax, selected: "separate" };
-        if (separateTax < combinedTax) return { tax: separateTax, selected: "separate" };
-        return { tax: combinedTax, selected: "combined" };
-      }
-
-      function vestFraction(monthsElapsed, totalMonths, cliffMonths) {
-        if (monthsElapsed < cliffMonths) return 0;
-        return clamp(monthsElapsed / totalMonths, 0, 1);
-      }
-
-      function update() {
-        const values = Object.fromEntries(fields.map((field) => [field.dataset.key, readField(field)]));
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(values));
-          document.querySelector("#storage-note").textContent = "输入保存在此浏览器";
-        } catch (_) {
-          document.querySelector("#storage-note").textContent = "数据仅保留在当前页面";
-        }
-
-        const monthly = number("monthlySalary");
-        const salaryMonths = number("salaryMonths");
-        const expectedBonus = number("annualBonus");
-        const annualAllowance = number("annualAllowance");
-        const firstYearMonths = clamp(number("firstYearMonths"), 0, 12);
-        const probationMonths = clamp(number("probationMonths"), 0, 12);
-        const probationRate = clamp(number("probationRate"), 0, 100) / 100;
-        const vestingYears = Math.max(number("vestingYears"), 0.25);
-        const totalVestMonths = vestingYears * 12;
-        const cliffMonths = clamp(number("cliffMonths"), 0, totalVestMonths);
-        const equityUnits = number("equityUnits");
-        const strikePrice = number("strikePrice");
-        const basePrice = number("shareBase");
-        const baseIntrinsic = equityUnits * Math.max(basePrice - strikePrice, 0);
-        const annualEquity = baseIntrinsic / vestingYears;
-        const specialDeduction = number("specialDeduction");
-        const taxMode = fieldFor("bonusTaxMode").value;
-        const reserve = number("signOnReserve");
-        const hasSalary = monthly > 0;
-        const hasAnyCompensation = hasSalary || number("equityUnits") > 0;
-        const hasEquity = number("equityUnits") > 0 && fieldFor("shareBase").value.trim() !== "";
-        const contributionKeys = ["socialBase", "socialRate", "housingBase", "housingRate"];
-        const customContributionsComplete = contributionKeys.every((key) => fieldFor(key).value.trim() !== "");
-        const useDefaultTax = fieldFor("useDefaultTax").checked;
-        const canEstimateNet = hasSalary && (useDefaultTax || customContributionsComplete);
-        const contributions = contributionDefaults();
-        const contributionPerMonth = canEstimateNet
-          ? contributions.socialBase * contributions.socialRate / 100
-            + contributions.housingBase * contributions.housingRate / 100
-          : 0;
-        function yearDetails(index, bonusOverride) {
-          const employedMonths = index === 0 ? firstYearMonths : 12;
-          // 试用期只发生在入职首年；第 2–4 年不再承受这笔差额
-          const probationShortfall = index === 0
-            ? (1 - probationRate) * Math.min(probationMonths, employedMonths)
-            : 0;
-          const fixedSalaryMonths = salaryMonths * employedMonths / 12 - probationShortfall;
-          const salary = monthly * Math.max(0, fixedSalaryMonths);
-          const bonus = (bonusOverride ?? expectedBonus) * employedMonths / 12;
-          const allowance = annualAllowance * employedMonths / 12;
-          const signOn = index === 0 ? number("signOnYear1") : index === 1 ? number("signOnYear2") : 0;
-          const contributions = contributionPerMonth * employedMonths;
-          // 年度汇算口径：6 万基本减除费用与专项附加扣除都按全年计
-          const deductions = specialDeduction;
-          const taxResult = taxForYear({ salary, bonus, allowance, signOn, contributions, specialDeduction: deductions, mode: taxMode });
-          const recurringCash = salary + bonus + allowance;
-          const grossCash = recurringCash + signOn;
-          const netCash = grossCash - taxResult.tax - contributions - (index === 0 ? reserve : 0);
-          const startElapsed = index === 0 ? 0 : firstYearMonths + (index - 1) * 12;
-          const endElapsed = firstYearMonths + index * 12;
-          const startFraction = vestFraction(startElapsed, totalVestMonths, cliffMonths);
-          const endFraction = vestFraction(endElapsed, totalVestMonths, cliffMonths);
-          const vestedFraction = Math.max(0, endFraction - startFraction);
-          const vestedUnits = equityUnits * vestedFraction;
-          const equityValue = baseIntrinsic * vestedFraction;
-          return { salary, bonus, allowance, signOn, recurringCash, grossCash, contributions, tax: taxResult.tax, selectedTaxMode: taxResult.selected, netCash, vestedFraction, vestedUnits, equityValue, total: grossCash + equityValue };
-        }
-
-        const years = Array.from({ length: 4 }, (_, index) => yearDetails(index));
-        const steadyYear = yearDetails(2);
-        const steadyCash = steadyYear.recurringCash;
-        const annualized = steadyCash + annualEquity;
-        const firstYear = years[0].grossCash + years[0].equityValue;
-        const recurringYear = yearDetails(2, 0);
-        const averageMonthlyNet = canEstimateNet ? recurringYear.netCash / 12 : 0;
-        const averageMonthlyWithBonus = canEstimateNet ? steadyYear.netCash / 12 : 0;
-        const exerciseCash = years[0].vestedUnits * strikePrice;
-        const cashShare = annualized > 0 ? steadyCash / annualized * 100 : 0;
-        const equityShare = annualized > 0 ? annualEquity / annualized * 100 : 0;
-
-        document.querySelector("#annual-total").textContent = hasAnyCompensation ? money(annualized) : "—";
-        document.querySelector("#cash-total").textContent = hasSalary ? money(steadyCash) : "—";
-        document.querySelector("#equity-total").textContent = hasEquity ? money(annualEquity) : "—";
-        document.querySelector("#first-year-total").textContent = hasAnyCompensation ? money(firstYear) : "—";
-        const monthlyNet = document.querySelector("#monthly-net");
-        monthlyNet.textContent = canEstimateNet ? money(averageMonthlyNet) : hasSalary ? "待设置缴费参数" : "待填写月薪";
-        monthlyNet.classList.toggle("is-pending", !canEstimateNet);
-        const withBonus = document.querySelector("#monthly-with-bonus");
-        withBonus.hidden = !canEstimateNet;
-        withBonus.dataset.amount = canEstimateNet ? money(averageMonthlyWithBonus) : "";
-        withBonus.textContent = canEstimateNet ? `含年终奖年均到手 ${withBonus.dataset.amount}` : "";
-        document.querySelector("#steady-net").textContent = canEstimateNet ? money(steadyYear.netCash) : "—";
-        document.querySelector("#first-year-net").textContent = canEstimateNet ? money(years[0].netCash) : "—";
-        document.querySelector("#annual-tax").textContent = canEstimateNet ? money(steadyYear.tax) : "—";
-        document.querySelector("#annual-contribution").textContent = canEstimateNet ? money(contributionPerMonth * 12) : "—";
-        document.querySelector("#result-caption").textContent = !hasSalary
-          ? "填写税前月薪后开始估算"
-          : !canEstimateNet
-            ? "填写社保与公积金参数，或勾选「按常见缴费参数估算」"
-            : "经常性月度到手：固定薪酬摊入月均，不含年终奖与期权";
-        document.querySelector("#exercise-cost").textContent = money(exerciseCash);
-        const modeLabel = taxMode === "auto"
-          ? `（自动比较：${steadyYear.selectedTaxMode === "separate" ? "单独计税" : "并入综合所得"}）`
-          : taxMode === "separate" ? "（单独计税）" : "（并入综合所得）";
-        document.querySelector("#bonus-tax-result").textContent = canEstimateNet ? modeLabel : "（待设置）";
-        const bounded = ["socialFloor", "socialCeiling", "housingFloor", "housingCeiling"].some(
-          (key) => fieldFor(key).value.trim() !== "");
-        const range = (floorKey, ceilingKey) => {
-          const floor = fieldFor(floorKey).value.trim() === "" ? "不限" : money(number(floorKey));
-          const ceiling = fieldFor(ceilingKey).value.trim() === "" ? "不限" : money(number(ceilingKey));
-          return `${floor} – ${ceiling}`;
-        };
-        document.querySelector("#assumption-hint").textContent = bounded
-          ? `缴费基数已按上下限约束：社保 ${range("socialFloor", "socialCeiling")}，公积金 ${range("housingFloor", "housingCeiling")}；手填的基数不受影响`
-          : `空白按月薪作基数、社保 ${number("socialRate", 10.5)}%、公积金 ${number("housingRate", 7)}%，专项扣除按 0 元；可逐项修改`;
-        document.querySelector("#tax-explainer-rates").textContent = useDefaultTax
-          ? `基数按月薪、社保个人比例按 ${contributions.socialRate}%、公积金按 ${contributions.housingRate}%`
-          : `基数按月薪、社保个人比例按 10.5%、公积金按 7%`;
-        announceResult(canEstimateNet
-          ? `税后月均到手 ${money(averageMonthlyNet)}，税后年现金 ${money(steadyYear.netCash)}`
-          : "");
-        document.querySelector("#cash-fill").style.width = `${cashShare}%`;
-        document.querySelector("#equity-fill").style.width = `${equityShare}%`;
-
-        const yearList = document.querySelector("#year-list");
-        const maxYear = Math.max(...years.map((year) => year.total), 1);
-        yearList.replaceChildren(...(hasAnyCompensation ? years.map((year, index) => {
-          const row = document.createElement("div");
-          row.className = "year-row";
-          const name = document.createElement("span");
-          name.className = "year-name";
-          name.textContent = `第 ${index + 1} 年`;
-          const track = document.createElement("div");
-          track.className = "year-track";
-          track.setAttribute("aria-label", `第 ${index + 1} 年 ${money(year.total)}`);
-          for (const [value, className] of [[year.recurringCash, "year-cash"], [year.equityValue, "year-equity"], [year.signOn, "year-sign-on"]]) {
-            const segment = document.createElement("span");
-            segment.className = className;
-            segment.style.width = `${Math.max(0, value / maxYear * 100)}%`;
-            track.append(segment);
-          }
-          const total = document.createElement("strong");
-          total.className = "year-total";
-          total.textContent = money(year.total);
-          row.append(name, track, total);
-          return row;
-        }) : [Object.assign(document.createElement("p"), { className: "empty-result", textContent: "填写月薪或期权份数后显示" })]));
-        document.querySelector("#four-year-total").textContent = hasAnyCompensation
-          ? `四年税前合计 ${money(years.reduce((sum, year) => sum + year.total, 0))}` : "";
-
-        const scenarioList = document.querySelector("#scenario-list");
-        const scenarios = [
-          ["低位", number("shareLow")],
-          ["基准", number("shareBase")],
-          ["高位", number("shareHigh")]
-        ];
-        const hasScenarios = number("equityUnits") > 0
-          && ["shareLow", "shareBase", "shareHigh"].every((key) => fieldFor(key).value.trim() !== "");
-        scenarioList.replaceChildren(...(hasScenarios
-          ? scenarios.map(([label, price]) => {
-          const item = document.createElement("div");
-          item.className = "scenario";
-          const name = document.createElement("span");
-          name.textContent = `${label} ${money(price)}/份`;
-          const total = document.createElement("strong");
-          total.textContent = money(steadyCash + equityUnits * Math.max(price - strikePrice, 0) / vestingYears);
-          item.append(name, total);
-          return item;
-        })
-          : [Object.assign(document.createElement("p"), { className: "empty-result", textContent: "填入份数和估值后显示情景" })]));
-
-        const isExample = fields.every((field) => {
-          const value = readField(field);
-          const expected = example[field.dataset.key];
-          // 示例里留空的项（上下限）要和"字段为空"比，不能把空串当 0 去比数字
-          if (field.type === "number") {
-            return expected === "" ? String(value).trim() === "" : Number(value || 0) === expected;
-          }
-          return value === expected;
-        });
-        document.querySelector("#example-tag").textContent = isExample ? "示例方案" : hasAnyCompensation ? "当前方案" : "待填写";
-      }
-
-      function restoreExample() {
-        for (const field of fields) writeField(field, example[field.dataset.key]);
-        update();
-      }
-
-      async function copyResults() {
-        if (number("monthlySalary") <= 0) {
-          setStatus("先填写税前月薪");
-          return;
-        }
-        const taxFields = ["socialBase", "socialRate", "housingBase", "housingRate"];
-        const taxReady = fieldFor("useDefaultTax").checked || taxFields.every((key) => fieldFor(key).value.trim() !== "");
-        if (!taxReady) {
-          setStatus("先勾选常见参数估算，或补全缴费参数");
-          return;
-        }
-        const taxBasis = fieldFor("useDefaultTax").checked
-          ? "常见缴费参数（空白基数按月薪、社保 10.5%、公积金 7%）"
-          : `自定义缴费参数（社保 ${fieldFor("socialRate").value}%，公积金 ${fieldFor("housingRate").value}%）`;
-        const bonusMonthlyAmount = document.querySelector("#monthly-with-bonus").dataset.amount;
-        const result = [
-          `税后月均到手：${document.querySelector("#monthly-net").textContent}`,
-          ...(bonusMonthlyAmount ? [`含年终奖年均到手：${bonusMonthlyAmount}`] : []),
-          `税后年现金：${document.querySelector("#steady-net").textContent}`,
-          `首年税后现金：${document.querySelector("#first-year-net").textContent}`,
-          `年化税前总包：${document.querySelector("#annual-total").textContent}`,
-          `首年税前总额：${document.querySelector("#first-year-total").textContent}`,
-          `缴费假设：${taxBasis}`,
-          "以上为薪酬估算，实际金额以工资单及个税申报为准"
-        ].join("\n");
-        try {
-          if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
-          await navigator.clipboard.writeText(result);
-          setStatus("结果已复制");
-        } catch (_) {
-          const buffer = document.createElement("textarea");
-          buffer.value = result;
-          buffer.setAttribute("readonly", "");
-          buffer.style.position = "fixed";
-          buffer.style.opacity = "0";
-          document.body.append(buffer);
-          buffer.select();
-          let copied = false;
-          try { copied = document.execCommand("copy"); } catch (_) { copied = false; }
-          buffer.remove();
-          setStatus(copied ? "结果已复制" : "复制失败，请手动记录");
-        }
-      }
-
-      function buildResultCanvas() {
-        const hasSalary = number("monthlySalary") > 0;
-        const hasEquityUnits = number("equityUnits") > 0;
-        if (!hasSalary && !hasEquityUnits) return null;
-
-        const width = 1200;
-        const scale = 2;
-        const top = 36;
-        const left = 40;
-        const cardWidth = 1120;
-        const netSecondaryAmount = document.querySelector("#monthly-with-bonus").dataset.amount || "";
-        const headerExtra = netSecondaryAmount ? 24 : 0;
-        const headerHeight = 360 + headerExtra;
-        const contentLeft = left + 40;
-        const contentRight = left + cardWidth - 40;
-        const barWidth = contentRight - contentLeft;
-        const contentTop = top + headerHeight;
-        const headingY = contentTop + 47;
-        const barY = headingY + 18;
-        const rowsStartY = barY + 53;
-        const rowGap = 45;
-        const dividerY = rowsStartY + 3 * rowGap + 38;
-        const footFirstY = dividerY + 41;
-        const footSecondY = dividerY + 85;
-        const ruleY = dividerY + 112;
-        const noteFirstY = ruleY + 36;
-        const noteSecondY = noteFirstY + 25;
-        const cardHeight = noteSecondY + 44 - top;
-        const height = top + cardHeight + 36;
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width * scale;
-        canvas.height = height * scale;
-        const context = canvas.getContext("2d");
-        if (!context) return null;
-        context.scale(scale, scale);
-
-        // 与 :root 的 token 同源：canvas 读不到 CSS 变量，只能在这里镜像一份
-        const palette = {
-          page: "#edf2f3",
-          paper: "#f8f8f2",
-          ink: "#1b303b",
-          muted: "#5b6f7b",
-          line: "#d8e2e5",
-          softLine: "#e9eff0",
-          green: "#103e32",
-          greenLine: "#45675c",
-          greenSoft: "#c3d3ca",
-          greenInk: "#f2f3e9",
-          lime: "#d8e794",
-          cash: "#197e76",
-          equity: "#bb842f"
-        };
-        const canvasStack = '"Plex Sub", "Noto Sub", "PingFang SC", "Microsoft YaHei", sans-serif';
-        const text = (value, x, y, { size = 16, weight = 400, color = palette.ink, align = "left" } = {}) => {
-          context.font = `${weight} ${size}px ${canvasStack}`;
-          context.fillStyle = color;
-          context.textAlign = align;
-          context.textBaseline = "alphabetic";
-          context.fillText(value, x, y);
-        };
-        const line = (x1, y1, x2, y2, color = palette.line, width = 1) => {
-          context.beginPath();
-          context.strokeStyle = color;
-          context.lineWidth = width;
-          context.moveTo(x1, y1);
-          context.lineTo(x2, y2);
-          context.stroke();
-        };
-        const roundedRect = (x, y, w, h, radius, color) => {
-          context.beginPath();
-          context.moveTo(x + radius, y);
-          context.arcTo(x + w, y, x + w, y + h, radius);
-          context.arcTo(x + w, y + h, x, y + h, radius);
-          context.arcTo(x, y + h, x, y, radius);
-          context.arcTo(x, y, x + w, y, radius);
-          context.closePath();
-          context.fillStyle = color;
-          context.fill();
-        };
-        const read = (id) => document.querySelector(`#${id}`).textContent.trim();
-        // 明细行的点线引导线，与页面同样的 4px 点距（页面用背景点阵，这里用虚线段）
-        const textLeader = (label, value, y, labelSize = 14, valueSize = 15) => {
-          context.font = `400 ${labelSize}px ${canvasStack}`;
-          const labelWidth = context.measureText(label).width;
-          context.font = `600 ${valueSize}px ${canvasStack}`;
-          const valueWidth = context.measureText(value).width;
-          const from = contentLeft + labelWidth + 9;
-          const to = contentRight - valueWidth - 9;
-          if (to - from < 12) return;
-          context.save();
-          context.lineCap = "round";
-          context.setLineDash([1, 3]);
-          line(from, y + 3, to, y + 3, palette.line);
-          context.restore();
-        };
-        const taxReady = fieldFor("useDefaultTax").checked
-          || ["socialBase", "socialRate", "housingBase", "housingRate"].every((key) => fieldFor(key).value.trim() !== "");
-        const netReady = hasSalary && taxReady;
-
-        context.fillStyle = palette.page;
-        context.fillRect(0, 0, width, height);
-        roundedRect(left, top, cardWidth, cardHeight, 13, palette.paper);
-        context.strokeStyle = palette.line;
-        context.lineWidth = 1;
-        context.strokeRect(left + 0.5, top + 0.5, cardWidth - 1, cardHeight - 1);
-
-        context.beginPath();
-        context.moveTo(left + 13, top);
-        context.lineTo(left + cardWidth - 13, top);
-        context.quadraticCurveTo(left + cardWidth, top, left + cardWidth, top + 13);
-        context.lineTo(left + cardWidth, top + headerHeight);
-        context.lineTo(left, top + headerHeight);
-        context.lineTo(left, top + 13);
-        context.quadraticCurveTo(left, top, left + 13, top);
-        context.closePath();
-        context.fillStyle = palette.green;
-        context.fill();
-        context.fillStyle = palette.equity;
-        context.fillRect(left, top + headerHeight - 2, cardWidth, 2);
-
-        text("薪资计算器", contentLeft, 84, { size: 19, weight: 600, color: palette.greenInk });
-        text(read("example-tag"), contentRight, 84, { size: 14, color: palette.greenSoft, align: "right" });
-        line(contentLeft, 112, contentRight, 112, palette.greenLine);
-        text("税后月均到手", contentLeft, 160, { size: 16, color: palette.greenSoft });
-        text(read("monthly-net"), contentLeft, 238, {
-          size: netReady ? 59 : 30,
-          weight: 700,
-          color: netReady ? palette.lime : palette.greenSoft
-        });
-        if (netSecondaryAmount) {
-          text(`含年终奖年均到手 ${netSecondaryAmount}`, contentLeft, 275, { size: 14, color: palette.greenSoft });
-        }
-        text(read("result-caption"), contentLeft, 275 + headerExtra, { size: 14, color: palette.greenSoft });
-        line(contentLeft, 304 + headerExtra, contentRight, 304 + headerExtra, palette.greenLine);
-        line(600, 322 + headerExtra, 600, 374 + headerExtra, palette.greenLine);
-        text("税后年现金", contentLeft, 337 + headerExtra, { size: 13, color: palette.greenSoft });
-        text(read("steady-net"), contentLeft, 368 + headerExtra, { size: 23, weight: 600, color: palette.greenInk });
-        text("年化税前总包", 630, 337 + headerExtra, { size: 13, color: palette.greenSoft });
-        text(read("annual-total"), 630, 368 + headerExtra, { size: 23, weight: 600, color: palette.greenInk });
-
-        text("年度收入组成", contentLeft, headingY, { size: 16, weight: 650 });
-        text("现金与股权估值", contentRight, headingY, { size: 12, color: palette.muted, align: "right" });
-        const cashShare = Math.max(0, Math.min(100, Number.parseFloat(document.querySelector("#cash-fill").style.width) || 0));
-        const equityShare = Math.max(0, Math.min(100 - cashShare, Number.parseFloat(document.querySelector("#equity-fill").style.width) || 0));
-        roundedRect(contentLeft, barY, barWidth, 8, 1, palette.softLine);
-        context.fillStyle = palette.cash;
-        context.fillRect(contentLeft, barY, barWidth * cashShare / 100, 8);
-        context.fillStyle = palette.equity;
-        context.fillRect(contentLeft + barWidth * cashShare / 100, barY, barWidth * equityShare / 100, 8);
-
-        const rows = [
-          ["稳态年度现金收入", read("cash-total")],
-          ["年均股权归属估值", read("equity-total")],
-          [`年度个税估算${read("bonus-tax-result")}`, read("annual-tax")],
-          ["个人社保与公积金", read("annual-contribution")]
-        ];
-        rows.forEach(([label, value], index) => {
-          const y = rowsStartY + index * rowGap;
-          textLeader(label, value, y);
-          text(label, contentLeft, y, { size: 14, color: palette.muted });
-          text(value, contentRight, y, { size: 15, weight: 600, align: "right" });
-        });
-        context.fillStyle = palette.line;
-        context.fillRect(contentLeft, dividerY, barWidth, 2);
-        text("首年税后可支配现金", contentLeft, footFirstY, { size: 14, color: palette.ink });
-        text(read("first-year-net"), contentRight, footFirstY, { size: 16, weight: 600, color: palette.cash, align: "right" });
-        text("首年税前总包，含股权估值", contentLeft, footSecondY, { size: 14, color: palette.muted });
-        text(read("first-year-total"), contentRight, footSecondY, { size: 16, weight: 600, align: "right" });
-        line(contentLeft, ruleY, contentRight, ruleY, palette.line);
-
-        const { socialBase, socialRate, housingBase, housingRate } = contributionDefaults();
-        const taxBasis = !taxReady
-          ? "税后金额待缴费参数设置"
-          : `缴费估算：社保 ${money(socialBase)} × ${socialRate}%，公积金 ${money(housingBase)} × ${housingRate}%`;
-        text(taxBasis, contentLeft, noteFirstY, { size: 12, color: palette.muted });
-        text("期权估值未计流动性折价及离职失效条款", contentLeft, noteSecondY, { size: 12, color: palette.muted });
-
-        return canvas;
-      }
-
-      const canvasToBlob = (canvas) => new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-
-      function saveImageFile(blob) {
-        const url = URL.createObjectURL(blob);
-        const download = document.createElement("a");
-        download.href = url;
-        const now = new Date();
-        const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
-        download.download = `薪资估算-${date}.png`;
-        download.click();
-        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
-
-      async function copyResultImage() {
-        const canvas = buildResultCanvas();
-        if (!canvas) {
-          setStatus("先填写月薪或期权份数");
-          return;
-        }
-        const blobPromise = canvasToBlob(canvas);
-        if (!navigator.clipboard?.write || !window.ClipboardItem) {
-          const blob = await blobPromise;
-          if (!blob) {
-            setStatus("图片生成失败，请重试");
-            return;
-          }
-          saveImageFile(blob);
-          setStatus("当前环境不支持复制图片，已改为下载 PNG");
-          return;
-        }
-        try {
-          await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
-          setStatus("图片已复制，可直接粘贴");
-        } catch (_) {
-          const blob = await blobPromise;
-          if (!blob) {
-            setStatus("图片生成失败，请重试");
-            return;
-          }
-          saveImageFile(blob);
-          setStatus("复制图片失败，已改为下载 PNG");
-        }
-      }
-
-      async function downloadResultImage() {
-        const canvas = buildResultCanvas();
-        if (!canvas) {
-          setStatus("先填写月薪或期权份数");
-          return;
-        }
-        const blob = await canvasToBlob(canvas);
-        if (!blob) {
-          setStatus("图片生成失败，请重试");
-          return;
-        }
-        saveImageFile(blob);
-        setStatus("PNG 已下载");
-      }
-
-      function clearForm() {
-        for (const field of fields) writeField(field, empty[field.dataset.key]);
-        update();
-      }
-
-      let clearTimer = 0;
-      function resetClearButton() {
-        window.clearTimeout(clearTimer);
-        const button = document.querySelector("#clear-button");
-        button.classList.remove("is-confirming");
-        button.textContent = "清空输入";
-      }
-
-      function requestClear() {
-        const button = document.querySelector("#clear-button");
-        if (!button.classList.contains("is-confirming")) {
-          button.classList.add("is-confirming");
-          button.textContent = "确认清空";
-          clearTimer = window.setTimeout(resetClearButton, 3500);
-          return;
-        }
-        resetClearButton();
-        clearForm();
-      }
-
-      try {
-        const saved = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem("salary-ledger-v3") || localStorage.getItem("salary-ledger-v2") || "null");
-        if (saved && typeof saved === "object") {
-          for (const field of fields) {
-            if (Object.prototype.hasOwnProperty.call(saved, field.dataset.key)) writeField(field, saved[field.dataset.key]);
-          }
-          if (!Object.prototype.hasOwnProperty.call(saved, "annualBonus") && Object.prototype.hasOwnProperty.call(saved, "bonusMonths")) {
-            const oldBonus = Number(saved.monthlySalary || 0) * Number(saved.bonusMonths || 0) * Number(saved.bonusPayout ?? 100) / 100;
-            fieldFor("annualBonus").value = oldBonus || "";
-          }
-        }
-      } catch (_) { /* 本地示例值作为初始内容 */ }
-
-      fields.forEach((field) => field.addEventListener(field.type === "checkbox" || field.tagName === "SELECT" ? "change" : "input", update));
-      document.querySelector("#reset-button").addEventListener("click", restoreExample);
-      document.querySelector("#clear-button").addEventListener("click", requestClear);
-      document.querySelector("#copy-results").addEventListener("click", copyResults);
-      document.querySelector("#copy-image").addEventListener("click", copyResultImage);
-      document.querySelector("#download-image").addEventListener("click", downloadResultImage);
-      update();
-    })();
-  </script>
+  <script src="calculator.js?v=20261022c"></script>
+  <script src="report.js?v=20261022c"></script>
+  <script src="result-image.js?v=20261022c"></script>
+  <script src="app.js?v=20261022c"></script>
 </body>
 </html>
