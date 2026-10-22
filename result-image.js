@@ -8,7 +8,7 @@
     const day = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")];
     return { date: day.join(".") };
   }
-  function render(report, { style = "paper", fontFamily = '"Plex Sub", "Noto Sub", sans-serif', monoFontFamily = '"Menlo", "Consolas", "Noto Sub", "PingFang SC", monospace', meta = metadata(report) } = {}) {
+  function render(report, { style = "paper", fontFamily = '"PingFang SC", "Microsoft YaHei", "Noto Sub", sans-serif', monoFontFamily = '"SFMono-Regular", "Menlo", "Consolas", "PingFang SC", "Microsoft YaHei", "Noto Sub", monospace', meta = metadata(report) } = {}) {
     const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas unavailable");
     const p = palettes[style] || palettes.paper, thermal = style === "thermal";

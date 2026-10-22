@@ -198,7 +198,7 @@
   async function imageBlob(snapshot, options) {
     const css = getComputedStyle(document.documentElement);
     await document.fonts?.ready;
-    const canvas = window.SalaryImage.render(snapshot, { ...options, fontFamily: css.fontFamily });
+    const canvas = window.SalaryImage.render(snapshot, { ...options, fontFamily: css.fontFamily, monoFontFamily: css.getPropertyValue("--font-mono").trim() });
     return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG unavailable")), "image/png"));
   }
   function saveImageFile(blob, style = exportStyle, meta = exportMeta) {

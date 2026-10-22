@@ -72,4 +72,6 @@ python3 scripts/build-standalone.py ../outputs/salary-calculator.html
 
 薪资计算、图片生成和数据保存均在浏览器本地完成，无分析脚本、广告或后端接口
 
-`fonts/` 使用自托管的 IBM Plex Sans 与 Noto Sans SC 可变字体子集，分别承载西文数字和中文。修改文案后，应将 HTML 和各 JS 中的界面文字加入字符集，重新用 `pyftsubset` 从原字体生成子集，并重新打包离线文件
+页面与和纸工资条优先使用系统中文字体：macOS、iOS 使用苹方，Windows 使用微软雅黑，其余环境回退到自托管的 Noto Sans SC 子集。普通数字与中文使用同一字体，金额采用等宽数字特性；热敏工资条的金额使用系统等宽字体
+
+修改文案后，应将 HTML 和各 JS 中的界面文字加入字符集，重新用 `pyftsubset` 从原字体生成 Noto Sans SC 子集，并重新打包离线文件
