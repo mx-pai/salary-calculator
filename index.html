@@ -394,12 +394,28 @@
                 <div class="entry"><input id="social-rate" data-key="socialRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="常见值：10.5"><span class="unit">%</span></div>
               </div>
               <div class="field">
+                <label for="social-floor">社保基数下限</label>
+                <div class="entry"><input id="social-floor" data-key="socialFloor" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
+              </div>
+              <div class="field">
+                <label for="social-ceiling">社保基数上限</label>
+                <div class="entry"><input id="social-ceiling" data-key="socialCeiling" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
+              </div>
+              <div class="field">
                 <label for="housing-base">公积金缴费基数</label>
                 <div class="entry"><input id="housing-base" data-key="housingBase" type="number" min="0" step="100" inputmode="decimal" placeholder="常见值：月薪"><span class="unit">元 / 月</span></div>
               </div>
               <div class="field">
                 <label for="housing-rate">公积金个人比例</label>
                 <div class="entry"><input id="housing-rate" data-key="housingRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="常见值：7"><span class="unit">%</span></div>
+              </div>
+              <div class="field">
+                <label for="housing-floor">公积金基数下限</label>
+                <div class="entry"><input id="housing-floor" data-key="housingFloor" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
+              </div>
+              <div class="field">
+                <label for="housing-ceiling">公积金基数上限</label>
+                <div class="entry"><input id="housing-ceiling" data-key="housingCeiling" type="number" min="0" step="1" inputmode="decimal" placeholder="留空不限"><span class="unit">元 / 月</span></div>
               </div>
               <div class="field">
                 <label for="special-deduction">年度专项附加扣除</label>
@@ -410,7 +426,7 @@
                 <div class="entry"><select id="bonus-tax-mode" data-key="bonusTaxMode"><option value="auto">自动比较</option><option value="combined">并入综合所得</option><option value="separate">单独计税</option></select></div>
               </div>
             </div>
-            <p class="tax-explainer">空白缴费参数须先选择右侧常见估算；选择后，基数按月薪、社保个人比例按 10.5%、公积金按 7%，已填写的项目会覆盖常见值。专项附加扣除空白按 0 元估算。税额按居民个人年度综合所得计算，实际预扣和汇算以工资单及申报为准；全年一次性奖金单独计税仅适用于符合条件的收入，<a href="https://www.chinatax.gov.cn/n810219/n810744/n3752930/n3752974/c3970366/content.html" target="_blank" rel="noreferrer">查看税务总局税法说明</a></p>
+            <p class="tax-explainer">空白缴费参数须先选择右侧常见估算；选择后，<span id="tax-explainer-rates">基数按月薪、社保个人比例按 10.5%、公积金按 7%</span>，已填写的项目会覆盖常见值；填了基数上下限时，按月薪推算的基数会被约束在该区间内。专项附加扣除空白按 0 元估算。税额按居民个人年度综合所得计算，实际预扣和汇算以工资单及申报为准；全年一次性奖金单独计税仅适用于符合条件的收入，<a href="https://www.chinatax.gov.cn/n810219/n810744/n3752930/n3752974/c3970366/content.html" target="_blank" rel="noreferrer">查看税务总局税法说明</a></p>
         </section>
 
         <section class="form-section">
@@ -470,7 +486,7 @@
           </div>
           <label class="assumption-option" for="use-default-tax">
             <input id="use-default-tax" data-key="useDefaultTax" type="checkbox">
-            <span><strong>按常见缴费参数估算</strong><small>空白按月薪作基数、社保 10.5%、公积金 7%，专项扣除按 0 元；可逐项修改</small></span>
+            <span><strong>按常见缴费参数估算</strong><small id="assumption-hint">空白按月薪作基数、社保 10.5%、公积金 7%，专项扣除按 0 元；可逐项修改</small></span>
           </label>
           <div class="result-kpis">
             <div><span>税后年现金</span><strong id="steady-net">—</strong></div>
@@ -484,7 +500,7 @@
           <div class="breakdown">
             <div class="breakdown-row"><span>稳态年度现金收入</span><i class="leader" aria-hidden="true"></i><strong id="cash-total">—</strong></div>
             <div class="breakdown-row"><span>年均股权归属估值</span><i class="leader" aria-hidden="true"></i><strong id="equity-total">—</strong></div>
-            <div class="breakdown-row"><span>年度个税估算<span id="bonus-tax-result">待设置</span></span><i class="leader" aria-hidden="true"></i><strong id="annual-tax">—</strong></div>
+            <div class="breakdown-row"><span>年度个税估算<span id="bonus-tax-result">（待设置）</span></span><i class="leader" aria-hidden="true"></i><strong id="annual-tax">—</strong></div>
             <div class="breakdown-row"><span>个人社保与公积金</span><i class="leader" aria-hidden="true"></i><strong id="annual-contribution">—</strong></div>
           </div>
           <div class="result-divider"></div>
@@ -539,6 +555,10 @@
         socialRate: 10.5,
         housingBase: 20000,
         housingRate: 7,
+        socialFloor: "",
+        socialCeiling: "",
+        housingFloor: "",
+        housingCeiling: "",
         specialDeduction: 0,
         useDefaultTax: true,
         bonusTaxMode: "auto",
@@ -565,6 +585,10 @@
         socialRate: "",
         housingBase: "",
         housingRate: "",
+        socialFloor: "",
+        socialCeiling: "",
+        housingFloor: "",
+        housingCeiling: "",
         specialDeduction: "",
         useDefaultTax: false,
         bonusTaxMode: "auto",
@@ -597,6 +621,31 @@
 
       const money = (value) => yuan.format(Math.round(value || 0));
       const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+
+      // 留空 = 不设限。上下限填反了也不崩：取较小的那个当上限
+      const clampBounded = (value, low, high) => {
+        const floor = low > 0 ? low : 0;
+        const ceiling = high > 0 ? Math.max(high, floor) : Infinity;
+        return Math.min(Math.max(value, floor), ceiling);
+      };
+
+      // 页面与导出图共用一处默认值，避免两套口径漂移
+      function contributionDefaults() {
+        const monthly = number("monthlySalary");
+        const useDefault = fieldFor("useDefaultTax").checked;
+        // 只对「按月薪推算」的基数封顶。用户手填了基数就照用户的，不悄悄改数
+        const base = (key, floorKey, ceilingKey) => {
+          if (fieldFor(key).value.trim() !== "") return number(key);
+          if (!useDefault) return 0;
+          return clampBounded(monthly, number(floorKey), number(ceilingKey));
+        };
+        return {
+          socialBase: base("socialBase", "socialFloor", "socialCeiling"),
+          socialRate: number("socialRate", useDefault ? 10.5 : 0),
+          housingBase: base("housingBase", "housingFloor", "housingCeiling"),
+          housingRate: number("housingRate", useDefault ? 7 : 0)
+        };
+      }
 
       let statusTimer = 0;
       function setStatus(message) {
@@ -695,9 +744,10 @@
         const customContributionsComplete = contributionKeys.every((key) => fieldFor(key).value.trim() !== "");
         const useDefaultTax = fieldFor("useDefaultTax").checked;
         const canEstimateNet = hasSalary && (useDefaultTax || customContributionsComplete);
+        const contributions = contributionDefaults();
         const contributionPerMonth = canEstimateNet
-          ? number("socialBase", useDefaultTax ? monthly : 0) * number("socialRate", useDefaultTax ? 10.5 : 0) / 100
-            + number("housingBase", useDefaultTax ? monthly : 0) * number("housingRate", useDefaultTax ? 7 : 0) / 100
+          ? contributions.socialBase * contributions.socialRate / 100
+            + contributions.housingBase * contributions.housingRate / 100
           : 0;
         function yearDetails(index, bonusOverride) {
           const employedMonths = index === 0 ? firstYearMonths : 12;
@@ -763,7 +813,20 @@
         const modeLabel = taxMode === "auto"
           ? `（自动比较：${steadyYear.selectedTaxMode === "separate" ? "单独计税" : "并入综合所得"}）`
           : taxMode === "separate" ? "（单独计税）" : "（并入综合所得）";
-        document.querySelector("#bonus-tax-result").textContent = canEstimateNet ? modeLabel : "待设置";
+        document.querySelector("#bonus-tax-result").textContent = canEstimateNet ? modeLabel : "（待设置）";
+        const bounded = ["socialFloor", "socialCeiling", "housingFloor", "housingCeiling"].some(
+          (key) => fieldFor(key).value.trim() !== "");
+        const range = (floorKey, ceilingKey) => {
+          const floor = fieldFor(floorKey).value.trim() === "" ? "不限" : money(number(floorKey));
+          const ceiling = fieldFor(ceilingKey).value.trim() === "" ? "不限" : money(number(ceilingKey));
+          return `${floor} – ${ceiling}`;
+        };
+        document.querySelector("#assumption-hint").textContent = bounded
+          ? `缴费基数已按上下限约束：社保 ${range("socialFloor", "socialCeiling")}，公积金 ${range("housingFloor", "housingCeiling")}；手填的基数不受影响`
+          : `空白按月薪作基数、社保 ${number("socialRate", 10.5)}%、公积金 ${number("housingRate", 7)}%，专项扣除按 0 元；可逐项修改`;
+        document.querySelector("#tax-explainer-rates").textContent = useDefaultTax
+          ? `基数按月薪、社保个人比例按 ${contributions.socialRate}%、公积金按 ${contributions.housingRate}%`
+          : `基数按月薪、社保个人比例按 10.5%、公积金按 7%`;
         announceResult(canEstimateNet
           ? `税后月均到手 ${money(averageMonthlyNet)}，税后年现金 ${money(steadyYear.netCash)}`
           : "");
@@ -819,8 +882,12 @@
 
         const isExample = fields.every((field) => {
           const value = readField(field);
-          if (field.type === "number") return Number(value || 0) === example[field.dataset.key];
-          return value === example[field.dataset.key];
+          const expected = example[field.dataset.key];
+          // 示例里留空的项（上下限）要和"字段为空"比，不能把空串当 0 去比数字
+          if (field.type === "number") {
+            return expected === "" ? String(value).trim() === "" : Number(value || 0) === expected;
+          }
+          return value === expected;
         });
         document.querySelector("#example-tag").textContent = isExample ? "示例方案" : hasAnyCompensation ? "当前方案" : "待填写";
       }
@@ -1045,11 +1112,7 @@
         text(read("first-year-total"), contentRight, footSecondY, { size: 16, weight: 600, align: "right" });
         line(contentLeft, ruleY, contentRight, ruleY, palette.line);
 
-        const monthlySalary = number("monthlySalary");
-        const socialBase = number("socialBase", fieldFor("useDefaultTax").checked ? monthlySalary : 0);
-        const socialRate = number("socialRate", fieldFor("useDefaultTax").checked ? 10.5 : 0);
-        const housingBase = number("housingBase", fieldFor("useDefaultTax").checked ? monthlySalary : 0);
-        const housingRate = number("housingRate", fieldFor("useDefaultTax").checked ? 7 : 0);
+        const { socialBase, socialRate, housingBase, housingRate } = contributionDefaults();
         const taxBasis = !taxReady
           ? "税后金额待缴费参数设置"
           : `缴费估算：社保 ${money(socialBase)} × ${socialRate}%，公积金 ${money(housingBase)} × ${housingRate}%`;
