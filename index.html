@@ -16,7 +16,7 @@
   <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、每月累计个税、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
   </script>
-  <link rel="stylesheet" href="styles.css?v=20261023monthly2">
+  <link rel="stylesheet" href="styles.css?v=20261023compact2">
 </head>
 <body>
   <main class="shell">
@@ -33,7 +33,7 @@
 <div class="field">
       <label for="monthly-salary">税前月薪</label>
       <div class="entry"><input id="monthly-salary" data-key="monthlySalary" type="number" min="0" step="100" inputmode="decimal" placeholder="例如 28000" aria-describedby="error-monthlySalary"><span class="unit">元</span></div>
-      <p class="field-error" id="error-monthlySalary" data-error-for="monthlySalary" hidden></p>
+      <p class="field-error" id="error-monthlySalary" data-error-for="monthlySalary" hidden></p><p class="input-equivalent"><span>固定工资 / 年</span><strong id="salary-equivalent">—</strong></p>
     </div><div class="field">
       <label for="salary-months">固定发薪月数</label>
       <div class="entry"><input id="salary-months" data-key="salaryMonths" type="number" min="0" step="0.5" max="24" inputmode="decimal" placeholder="12" aria-describedby="error-salaryMonths"><span class="unit">个月</span></div>
@@ -43,47 +43,40 @@
             <div class="bonus-header"><span>年终奖</span><div class="bonus-switch" role="group" aria-label="年终奖填写方式"><button type="button" data-bonus-mode="months" aria-pressed="true">按月数</button><button type="button" data-bonus-mode="amount" aria-pressed="false">按金额</button></div></div>
             <input id="bonus-input-mode" data-key="bonusMode" type="hidden" value="months">
             <div class="bonus-fields"><div data-bonus-panel="months"><div class="field">
-      <label for="bonus-months">年终奖月数</label>
+      <label class="visually-hidden" for="bonus-months">年终奖月数</label>
       <div class="entry"><input id="bonus-months" data-key="bonusMonths" type="number" min="0" step="0.5" max="36" inputmode="decimal" placeholder="例如 3" aria-describedby="error-bonusMonths"><span class="unit">个月</span></div>
       <p class="field-error" id="error-bonusMonths" data-error-for="bonusMonths" hidden></p>
     </div></div><div data-bonus-panel="amount" hidden><div class="field">
-      <label for="annual-bonus">年终奖税前金额</label>
+      <label class="visually-hidden" for="annual-bonus">年终奖税前金额</label>
       <div class="entry"><input id="annual-bonus" data-key="annualBonus" type="number" min="0" step="1000" inputmode="decimal" placeholder="例如 84000" aria-describedby="error-annualBonus"><span class="unit">元 / 年</span></div>
       <p class="field-error" id="error-annualBonus" data-error-for="annualBonus" hidden></p>
     </div></div><div class="bonus-equivalent"><span id="bonus-equivalent-label">税前金额</span><strong id="bonus-equivalent">¥0</strong><small id="bonus-expression">随月薪自动换算</small></div></div>
             <div class="quick-picks bonus-picks" id="bonus-quick-picks" role="group" aria-label="年终奖月数快捷选择"><button type="button" data-quick-key="bonusMonths" data-quick-value="0">无奖金</button><button type="button" data-quick-key="bonusMonths" data-quick-value="1">1 个月</button><button type="button" data-quick-key="bonusMonths" data-quick-value="2">2 个月</button><button type="button" data-quick-key="bonusMonths" data-quick-value="3">3 个月</button><button type="button" data-quick-key="bonusMonths" data-quick-value="6">6 个月</button></div>
-            <p class="hint">约定的 13 薪计入固定发薪月数，额外年终奖在这里填写</p>
+            <p class="hint">13 薪计入固定发薪月数，年终奖填写额外发放部分</p>
           </div>
         </div>
-        <div class="income-summary"><div><span>全年税前现金</span><strong id="cash-preview">—</strong></div><p id="income-formula">固定工资 + 年终奖 + 现金补贴</p></div>
-        <div class="tax-quick">          <label class="assumption-option" for="use-default-tax"><input id="use-default-tax" data-key="useDefaultTax" type="checkbox"><span><strong>使用常见参数估算到手</strong><small>空白基数按月薪，社保 10.5%、公积金 7%，可逐项调整</small></span></label>
+        <div class="income-summary"><div class="income-total"><span>全年税前现金</span><strong id="cash-preview">—</strong></div><div class="live-net-summary" id="live-net-summary" hidden><span>税后月均到手</span><strong id="inline-monthly-net">—</strong></div><p id="income-formula">固定工资 + 年终奖 + 现金补贴</p></div>
+        <div class="tax-quick">          <label class="assumption-option" for="use-default-tax"><input id="use-default-tax" data-key="useDefaultTax" type="checkbox"><span><strong>使用常见参数估算到手</strong><small id="tax-assumption-help">空白基数按月薪，社保 10.5%、公积金 7%，可逐项调整</small></span></label>
           <div class="result-note"><p id="assumption-hint">缴费参数待设置，当前展示税前收入</p><button class="view-link" id="edit-tax" type="button">调整参数</button></div>
 </div>
       </section>
 
       <aside class="result-panel" id="results" aria-label="薪酬计算结果">
-        <div class="preview-heading"><div><h2>收入预览</h2><p>年度看总额，每月看到手</p></div><button class="generate-button" id="generate-receipt" type="button" disabled>生成工资条</button></div>
-        <div class="view-tabs" role="tablist" aria-label="结果查看方式"><button type="button" id="tab-receipt" role="tab" data-result-view="receipt" aria-selected="true" aria-controls="receipt-view">年度工资条</button><button type="button" id="tab-monthly" role="tab" data-result-view="monthly" aria-selected="false" aria-controls="monthly-view" tabindex="-1">每月到手</button></div>
+        <div class="preview-heading"><h2>计算结果</h2><div class="export-tools"><label class="visually-hidden" for="receipt-style">工资条风格</label><select id="receipt-style"><option value="paper">和纸小票</option><option value="thermal">热敏小票</option></select><button class="generate-button" id="generate-receipt" type="button" disabled>生成工资条</button></div></div>
+        <div class="view-tabs" role="tablist" aria-label="结果查看方式"><button type="button" id="tab-receipt" role="tab" data-result-view="receipt" aria-selected="true" aria-controls="receipt-view">全年概览</button><button type="button" id="tab-monthly" role="tab" data-result-view="monthly" aria-selected="false" aria-controls="monthly-view" tabindex="-1">每月到手</button></div>
         <div id="receipt-view" role="tabpanel" aria-labelledby="tab-receipt">
-        <div class="paper-options" role="group" aria-label="工资条风格"><button type="button" data-receipt-style="paper" aria-pressed="true">和纸小票</button><button type="button" data-receipt-style="thermal" aria-pressed="false">热敏小票</button></div>
         <div class="receipt-stage">
           <div class="receipt-shadow">
             <article class="receipt-sheet" id="receipt-sheet" data-style="paper" aria-label="工资条内容">
               <div class="result-hero">
-                <div class="result-label"><h2>薪酬估算单</h2><span class="example-tag" id="example-tag">待填写</span></div>
-                <div class="receipt-meta"><span id="receipt-date"></span><span>人民币 / 年度估算</span></div>
-                <div class="receipt-rule"></div>
+                <div class="result-label"><span>年度估算 · 人民币</span><span class="example-tag" id="example-tag">待填写</span></div>
                 <div class="net-label" id="headline-label">薪酬概览</div><div class="net-total is-pending" id="monthly-net">先填税前月薪</div>
                 <p class="net-secondary" id="monthly-with-bonus" hidden></p><p class="total-caption" id="result-caption">月薪和奖金填好后，结果会实时更新</p>
                 <p class="visually-hidden" id="result-announcer" role="status" aria-live="polite" aria-atomic="true"></p>
                 <div class="result-kpis" id="result-kpis"></div>
               </div>
-              <div class="result-body">
-                <div class="mix-heading"><h3>全年收入明细</h3><span>税前</span></div>
-                <div id="income-breakdown"></div><div class="deductions" id="deduction-breakdown"></div>
-                <div class="first-year-group" id="first-year-results"></div>
-              </div>
-              <div class="receipt-bottom"><span>按年度汇算口径估算</span><span>股权估值单独列示</span><span class="receipt-seal" id="receipt-mark">一薪一意</span></div>
+              <div class="deductions" id="deduction-breakdown"></div>
+              <details class="annual-breakdown"><summary>收入与首年明细<span class="disclosure" aria-hidden="true"></span></summary><div class="result-body"><div class="mix-heading"><h3>全年税前收入</h3></div><div id="income-breakdown"></div><div class="first-year-group" id="first-year-results"></div></div></details>
             </article>
           </div>
         </div>
@@ -223,9 +216,9 @@
     <div class="export-canvas" id="export-canvas" aria-busy="false"><img id="export-preview" alt="生成的薪酬估算工资条" role="button" tabindex="0" aria-label="放大工资条预览" aria-pressed="false"><p id="export-loading" role="status">正在生成工资条</p></div>
     <div class="export-footer"><span id="export-status" role="status" aria-live="polite"></span><div><button class="copy-button" id="copy-image" type="button" disabled>复制图片</button><button class="generate-button" id="download-image" type="button" disabled>保存图片</button></div></div>
   </dialog>
-  <script src="calculator.js?v=20261023monthly2"></script>
-  <script src="report.js?v=20261023monthly2"></script>
-  <script src="result-image.js?v=20261023monthly2"></script>
-  <script src="app.js?v=20261023monthly2"></script>
+  <script src="calculator.js?v=20261023compact2"></script>
+  <script src="report.js?v=20261023compact2"></script>
+  <script src="result-image.js?v=20261023compact2"></script>
+  <script src="app.js?v=20261023compact2"></script>
 </body>
 </html>

@@ -100,6 +100,7 @@
       bonus: { value: money(result.bonus), description: bonusDescription,
         expression: state.bonusMode === "months" ? `${money(result.monthly)} × ${decimal.format(bonusMonths)} 个月`
           : bonusMonths === null ? "填写月薪后显示对应月数" : `约 ${decimal.format(bonusMonths)} 个月工资` },
+      annualSalary: result.monthly > 0 && result.grossReady ? money(result.annualSalary) : "—",
       annualCash: hasIncome && result.grossReady ? money(gross) : "—",
       kpis: [
         { label: "税后年现金", value: money(result.steady.net) },

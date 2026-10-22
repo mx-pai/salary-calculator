@@ -79,6 +79,9 @@
     setText("#bonus-equivalent", mode === "months" ? value.bonus.value : value.bonus.expression);
     setText("#bonus-expression", mode === "months" ? value.bonus.expression : `年终奖税前 ${value.bonus.value}`);
     setText("#cash-preview", value.annualCash);
+    setText("#salary-equivalent", value.annualSalary);
+    setText("#inline-monthly-net", value.headline.value);
+    $("#live-net-summary").hidden = !value.netReady;
     setText("#income-formula", value.cashFormula);
     setText("#example-tag", value.tag);
     setText("#headline-label", value.headline.label);
@@ -88,6 +91,7 @@
     $("#monthly-with-bonus").hidden = !value.headline.secondary;
     setText("#result-caption", value.headline.caption);
     setText("#assumption-hint", value.contributionText);
+    $("#tax-assumption-help").hidden = value.netReady;
     setText("#tax-settings-summary", value.taxSummary);
     setText("#extras-summary", value.extrasSummary);
     setText("#equity-summary", value.equitySummary);
@@ -118,9 +122,6 @@
     $(".result-more").hidden = !value.hasIncome;
     $("#generate-receipt").disabled = !value.canExport;
     renderErrors(value.errors);
-    const meta = window.SalaryImage.metadata(value);
-    setText("#receipt-date", meta.date);
-    setText("#receipt-mark", value.signature);
     document.querySelectorAll("[data-quick-key]").forEach(button => button.setAttribute("aria-pressed", String(String(state[button.dataset.quickKey]).trim() !== "" && Number(state[button.dataset.quickKey]) === Number(button.dataset.quickValue))));
     $("#bonus-quick-picks").hidden = mode !== "months";
     renderPayroll(value.payroll);
@@ -151,7 +152,7 @@
     $("#month-chart").replaceChildren(...payroll.months.map(month => {
       const button = element("button", "month-column"); button.type = "button"; button.dataset.payrollMonth = month.month;
       button.setAttribute("aria-label", `${month.label}到手 ${month.net}，个税 ${month.tax}`);
-      const bar = element("span", "month-bar"); bar.style.height = `${4 + month.height * 69}px`; bar.setAttribute("aria-hidden", "true");
+      const bar = element("span", "month-bar"); bar.style.height = `${4 + month.height * 52}px`; bar.setAttribute("aria-hidden", "true");
       button.append(bar, element("span", "month-name", String(month.month)));
       button.title = `${month.label}到手 ${month.net}`; return button;
     }));
@@ -203,7 +204,7 @@
   function setReceiptStyle(style) {
     receiptStyle = style === "thermal" ? "thermal" : "paper";
     $("#receipt-sheet").dataset.style = receiptStyle;
-    document.querySelectorAll("[data-receipt-style]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.receiptStyle === receiptStyle)));
+    $("#receipt-style").value = receiptStyle;
     try { localStorage.setItem("mx-pai-receipt-style", receiptStyle); } catch (_) { /* 当前页面仍可切换 */ }
   }
   async function refreshExport() {
@@ -287,7 +288,7 @@
       }
     }
   });
-  document.querySelectorAll("[data-receipt-style]").forEach(button => button.addEventListener("click", () => setReceiptStyle(button.dataset.receiptStyle)));
+  $("#receipt-style").addEventListener("change", event => setReceiptStyle(event.target.value));
   $("#generate-receipt").addEventListener("click", openExport);
   function toggleImageZoom() {
     const zoomed = $("#export-canvas").classList.toggle("is-zoomed");
