@@ -24,3 +24,33 @@
 ## 隐私
 
 计算在浏览器本地完成，页面不接入分析脚本、广告或后端服务
+
+## 字体
+
+`fonts/` 下是两个自托管的子集字体，页面只加载这两个文件：
+
+| 文件 | 来源 | 作用 |
+|---|---|---|
+| `plex-sans-subset.woff2` | IBM Plex Sans 3.201（可变 wght 100–700） | 西文、数字、`¥` 与千分位 |
+| `noto-sans-sc-subset.woff2` | Noto Sans SC 2.004（可变 wght 100–900） | 中文与全角标点 |
+
+两者都是**可变字重**，所以 400/500/600/700 四档字重都有真实字形，不依赖 `font-synthesis`。数字在两个字体里都原生等宽，金额在输入时不会左右抖动。
+
+**子集是按页面当前文案裁的，改了文案要重新生成**，否则新字会回落到系统字体（页面不至于破版，但字形会突变）：
+
+```bash
+# 1. 重新收集字符集：页面源码里的全部文本（含 JS 里的界面文案）+ ASCII + 中文标点
+#    见下方字符集说明，或直接用 python3 提取 index.html 的文本
+# 2. 裁剪
+pip install "fonttools[woff]" brotli
+pyftsubset NotoSansSC.ttf --text-file=chars.txt --flavor=woff2 \
+  --layout-features='kern,liga,clig,ccmp,locl,mark,mkmk,vert,vrt2,calt' \
+  --no-hinting --desubroutinize --drop-tables+=FFTM,DSIG \
+  --output-file=fonts/noto-sans-sc-subset.woff2
+pyftsubset IBMPlexSans.ttf --text-file=chars.txt --flavor=woff2 \
+  --layout-features='kern,liga,clig,ccmp,locl,mark,mkmk,calt,tnum,lnum,zero' \
+  --no-hinting --desubroutinize --drop-tables+=FFTM,DSIG \
+  --output-file=fonts/plex-sans-subset.woff2
+```
+
+字符集必须包含：页面全部可见文案（**包括 JS 里拼出来的提示语**）、ASCII 可打印字符、`¥ , . %`、中文标点与全角字符。漏掉 `¥` 或 `,` 会让金额掉到别的字体上，在结果卡里一眼可见

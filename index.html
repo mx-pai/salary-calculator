@@ -17,20 +17,67 @@
     {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
   </script>
   <style>
+    @font-face {
+      font-family: "Plex Sub";
+      src: url(fonts/plex-sans-subset.woff2) format("woff2");
+      font-weight: 100 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Noto Sub";
+      src: url(fonts/noto-sans-sc-subset.woff2) format("woff2");
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
     :root {
       color-scheme: light;
+      /* 版面 */
       --page: #edf2f3;
       --paper: #fff;
+      --paper-warm: #f8f8f2;
       --ink: #1b303b;
-      --muted: #647985;
-      --quiet: #84959d;
+      --ink-soft: #405763;
+      --muted: #5b6f7b;
+      --placeholder: #64777f;
+      /* 描边与填充 */
       --line: #d8e2e5;
-      --soft-line: #e9eff0;
+      --line-soft: #e9eff0;
+      --border: #c8d5d9;
+      --border-strong: #8fa7ad;
+      --field-bg: #fbfcfc;
+      --hover-bg: #f8fbfb;
+      /* 数据色 */
       --cash: #197e76;
+      --cash-dark: #126c65;
       --equity: #bb842f;
-      --focus: #226db3;
+      --equity-dark: #b99258;
+      --signon: #7a8b93;
+      /* 单据抬头 */
+      --hero: #103e32;
+      --hero-raised: #194b3d;
+      --hero-ink: #f2f3e9;
+      --hero-soft: #c3d3ca;
+      --hero-border: #7c9b8d;
+      --hero-border-hover: #c4d8ca;
+      --accent: #d8e794;
+      --accent-hover: #e4f0b2;
+      --accent-ink: #173d32;
+      --chip-ink: #dbe8ab;
+      /* 状态 */
+      --danger: #a8432c;
+      --danger-line: #c0654c;
+      --danger-bg: #fdf3f0;
+      --danger-bg-hover: #fbe9e3;
+      --focus-halo: #73a8d4;
+      /* 字重：只保留四档。可变字体上这四档都有真实字形，
+         字体加载失败回落 PingFang / 雅黑时同样落在真实档位上 */
+      --w-body: 400;
+      --w-label: 500;
+      --w-title: 600;
+      --w-display: 700;
       --radius: 8px;
-      font-family: "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-family: "Plex Sub", "Noto Sub", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
       font-synthesis: none;
       text-rendering: optimizeLegibility;
     }
@@ -42,7 +89,7 @@
 
     .shell { width: min(1560px, calc(100% - 64px)); margin: 0 auto; padding: 36px 0 44px; }
     .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 25px; }
-    h1 { font-size: clamp(30px, 3vw, 38px); font-weight: 690; line-height: 1.17; }
+    h1 { font-size: clamp(30px, 3vw, 38px); font-weight: var(--w-display); line-height: 1.17; }
     .intro { margin-top: 9px; color: var(--muted); font-size: 15px; line-height: 1.55; }
     .mast-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 11px; }
     .local-note { color: var(--muted); font-size: 12px; }
@@ -51,22 +98,22 @@
     .text-button, .copy-button {
       min-height: 40px;
       padding: 0 15px;
-      border: 1px solid #c8d5d9;
+      border: 1px solid var(--border);
       border-radius: 6px;
-      background: #fff;
+      background: var(--paper);
       color: var(--ink);
       cursor: pointer;
       font-size: 13px;
-      font-weight: 610;
+      font-weight: var(--w-title);
       transition: border-color .16s ease, background-color .16s ease;
     }
-    .text-button:hover, .copy-button:hover { border-color: #8fa7ad; background: #f8fbfb; }
-    .text-button#reset-button { border-color: var(--cash); background: var(--cash); color: #fff; }
-    .text-button#reset-button:hover { border-color: #126c65; background: #126c65; }
-    .text-button#clear-button.is-confirming { border-color: #c0654c; background: #fdf3f0; color: #a8432c; }
-    .text-button#clear-button.is-confirming:hover { border-color: #a8432c; background: #fbe9e3; }
+    .text-button:hover, .copy-button:hover { border-color: var(--border-strong); background: var(--hover-bg); }
+    .text-button#reset-button { border-color: var(--cash); background: var(--cash); color: var(--paper); }
+    .text-button#reset-button:hover { border-color: var(--cash-dark); background: var(--cash-dark); }
+    .text-button#clear-button.is-confirming { border-color: var(--danger-line); background: var(--danger-bg); color: var(--danger); }
+    .text-button#clear-button.is-confirming:hover { border-color: var(--danger); background: var(--danger-bg-hover); }
     .text-button:focus-visible, .copy-button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
-      outline: 3px solid #73a8d4;
+      outline: 3px solid var(--focus-halo);
       outline-offset: 2px;
     }
 
@@ -74,24 +121,24 @@
     .form-panel, .result-panel { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
     .form-panel { overflow: hidden; }
     .form-section { padding: 25px 27px; }
-    .form-section + .form-section { border-top: 1px solid var(--soft-line); }
+    .form-section + .form-section { border-top: 1px solid var(--line-soft); }
     .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
-    .section-heading h2 { font-size: 18px; font-weight: 660; }
-    .section-heading span { color: var(--quiet); font-size: 12px; }
+    .section-heading h2 { font-size: 18px; font-weight: var(--w-title); }
+    .section-heading span { color: var(--muted); font-size: 12px; }
 
     .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 18px; }
     .field { min-width: 0; }
     .field.wide { grid-column: 1 / -1; }
-    .field label { display: block; margin-bottom: 7px; color: #405763; font-size: 13px; font-weight: 620; }
-    .entry { display: flex; min-height: 48px; align-items: center; padding: 0 13px; border: 1px solid #cbd9dd; border-radius: 6px; background: #fbfcfc; transition: border-color .16s ease, background-color .16s ease; }
-    .entry:focus-within { border-color: var(--cash); background: #fff; }
+    .field label { display: block; margin-bottom: 7px; color: var(--ink-soft); font-size: 13px; font-weight: var(--w-title); }
+    .entry { display: flex; min-height: 48px; align-items: center; padding: 0 13px; border: 1px solid var(--border); border-radius: 6px; background: var(--field-bg); transition: border-color .16s ease, background-color .16s ease; }
+    .entry:focus-within { border-color: var(--cash); background: var(--paper); }
     .entry input, .entry select { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); }
-    .entry input { font-size: 17px; font-weight: 590; font-variant-numeric: tabular-nums; }
-    .entry input::placeholder { color: #89999f; font-size: 13px; font-weight: 450; }
+    .entry input { font-size: 17px; font-weight: var(--w-label); font-variant-numeric: tabular-nums; }
+    .entry input::placeholder { color: var(--placeholder); font-size: 13px; font-weight: var(--w-body); }
     .entry select { cursor: pointer; font-size: 14px; }
     .entry input::-webkit-inner-spin-button, .entry input::-webkit-outer-spin-button { margin: 0; appearance: none; }
     .entry input[type="number"] { appearance: textfield; }
-    .unit { flex: 0 0 auto; margin-left: 9px; color: var(--quiet); font-size: 12px; }
+    .unit { flex: 0 0 auto; margin-left: 9px; color: var(--muted); font-size: 12px; }
     .hint { margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.45; }
     .section-tip { margin-top: 15px; color: var(--muted); font-size: 12px; line-height: 1.55; }
 
@@ -108,83 +155,83 @@
     details.advanced > summary::-webkit-details-marker, details.result-more > summary::-webkit-details-marker { display: none; }
     details.advanced > summary::after, details.result-more > summary::after { margin-left: auto; color: var(--cash); content: "⌄"; font-size: 17px; line-height: 1; }
     details.advanced[open] > summary::after, details.result-more[open] > summary::after { transform: rotate(180deg); }
-    details.advanced > summary span { font-size: 14px; font-weight: 640; }
+    details.advanced > summary span { font-size: 14px; font-weight: var(--w-title); }
     details.advanced > summary small { color: var(--muted); font-size: 12px; }
     .advanced-content { padding: 0 27px 24px; }
     .advanced-content.fields { padding-top: 0; }
-    .tax-explainer { margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--soft-line); color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .tax-explainer { margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 11px; line-height: 1.7; }
     .tax-explainer a { color: var(--cash); text-underline-offset: 2px; }
 
-    .result-panel { position: sticky; top: 18px; overflow: hidden; border-color: #cbd9d3; background: #f8f8f2; }
+    .result-panel { position: sticky; top: 18px; overflow: hidden; border-color: var(--line); background: var(--paper-warm); }
     .result-top { padding: 0 27px 22px; }
-    .result-hero { position: relative; margin: 0 -27px; padding: 24px 27px 25px; overflow: hidden; border-bottom: 2px solid #b99258; background: #103e32; color: #f2f3e9; }
+    .result-hero { position: relative; margin: 0 -27px; padding: 24px 27px 25px; overflow: hidden; border-bottom: 2px solid var(--equity-dark); background: var(--hero); color: var(--hero-ink); }
     .result-label { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-    .result-label h2 { font-size: 17px; font-weight: 650; }
-    .example-tag { padding: 3px 9px; border: 1px solid rgba(216, 231, 148, .34); border-radius: 4px; background: rgba(216, 231, 148, .14); color: #dbe8ab; font-size: 11px; }
-    .assumption-option { display: flex; align-items: flex-start; gap: 11px; margin-top: 15px; padding: 13px 15px; border: 1px solid #d6dfd9; border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+    .result-label h2 { font-size: 17px; font-weight: var(--w-title); }
+    .example-tag { padding: 3px 9px; border: 1px solid rgba(216, 231, 148, .34); border-radius: 4px; background: rgba(216, 231, 148, .14); color: var(--chip-ink); font-size: 11px; }
+    .assumption-option { display: flex; align-items: flex-start; gap: 11px; margin-top: 15px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
     .assumption-option input { width: 17px; height: 17px; flex: 0 0 17px; margin: 2px 0 0; accent-color: var(--cash); }
     .assumption-option strong, .assumption-option small { display: block; }
-    .assumption-option strong { font-size: 13px; font-weight: 630; }
+    .assumption-option strong { font-size: 13px; font-weight: var(--w-title); }
     .assumption-option small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.5; }
-    .net-label { margin-top: 22px; color: #c3d3ca; font-size: 13px; }
+    .net-label { margin-top: 22px; color: var(--hero-soft); font-size: 13px; }
     .total { margin-top: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .total.net-total { color: #d8e794; font-size: clamp(39px, 4vw, 49px); font-weight: 700; line-height: 1.17; }
-    .total.net-total.is-pending { color: #c3d3ca; font-size: 23px; font-weight: 560; }
-    .total-caption { min-height: 34px; margin-top: 7px; color: #c3d3ca; font-size: 12px; line-height: 1.55; }
-    .net-secondary { margin: 6px 0 0; color: #c3d3ca; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .total.net-total { color: var(--accent); font-size: clamp(39px, 4vw, 49px); font-weight: var(--w-display); line-height: 1.17; }
+    .total.net-total.is-pending { color: var(--hero-soft); font-size: 23px; font-weight: var(--w-label); }
+    .total-caption { min-height: 34px; margin-top: 7px; color: var(--hero-soft); font-size: 12px; line-height: 1.55; }
+    .net-secondary { margin: 6px 0 0; color: var(--hero-soft); font-size: 12px; font-variant-numeric: tabular-nums; }
     .result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
-    .copy-button { border-color: #7c9b8d; background: transparent; color: #f2f3e9; }
-    .copy-button:hover { border-color: #c4d8ca; background: #194b3d; }
-    #copy-image { border-color: #d8e794; background: #d8e794; color: #173d32; }
-    #copy-image:hover { border-color: #e4f0b2; background: #e4f0b2; }
-    #action-status { color: #c3d3ca; font-size: 11px; }
+    .copy-button { border-color: var(--hero-border); background: transparent; color: var(--hero-ink); }
+    .copy-button:hover { border-color: var(--hero-border-hover); background: var(--hero-raised); }
+    #copy-image { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+    #copy-image:hover { border-color: var(--accent-hover); background: var(--accent-hover); }
+    #action-status { color: var(--hero-soft); font-size: 11px; }
 
-    .result-kpis { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; border-bottom: 1px solid #d6dfd9; }
+    .result-kpis { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; border-bottom: 1px solid var(--line); }
     .result-kpis > div { padding: 14px 14px 14px 0; }
     .result-kpis > div + div { padding-left: 17px; border-left: 1px solid var(--line); }
     .result-kpis span { display: block; color: var(--muted); font-size: 11px; }
     .result-kpis strong { display: block; margin-top: 5px; color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
 
     .mix-heading { display: flex; justify-content: space-between; gap: 12px; margin-top: 19px; color: var(--muted); font-size: 11px; }
-    .mix-heading span:last-child { color: var(--quiet); }
-    .splitbar { display: flex; width: 100%; height: 8px; margin: 9px 0 18px; overflow: hidden; border-radius: 1px; background: #e2e9e5; }
+    .mix-heading span:last-child { color: var(--muted); }
+    .splitbar { display: flex; width: 100%; height: 8px; margin: 9px 0 18px; overflow: hidden; border-radius: 1px; background: var(--line-soft); }
     .splitbar .cash-fill { background: var(--cash); }
     .splitbar .equity-fill { background: var(--equity); }
     .breakdown { display: grid; gap: 0; }
     .breakdown-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 14px; color: var(--muted); font-size: 12px; }
-    .breakdown-row + .breakdown-row { padding-top: 11px; border-top: 1px solid #e9eeea; }
+    .breakdown-row + .breakdown-row { padding-top: 11px; border-top: 1px solid var(--line-soft); }
     .breakdown-row:not(:last-child) { padding-bottom: 11px; }
-    .breakdown-row strong { color: var(--ink); font-size: 13px; font-weight: 610; font-variant-numeric: tabular-nums; text-align: right; }
-    .result-divider { height: 1px; margin: 17px 0 14px; background: #cbd9d3; }
+    .breakdown-row strong { color: var(--ink); font-size: 13px; font-weight: var(--w-title); font-variant-numeric: tabular-nums; text-align: right; }
+    .result-divider { height: 1px; margin: 17px 0 14px; background: var(--line); }
     .first-year { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; color: var(--muted); font-size: 12px; }
     .first-year strong { color: var(--cash); font-size: 15px; font-variant-numeric: tabular-nums; text-align: right; }
     .gross-first-year { margin-top: 11px; }
 
     details.result-more { border-top: 1px solid var(--line); }
-    details.result-more > summary { min-height: 56px; color: var(--cash); font-size: 13px; font-weight: 630; }
-    .timeline { padding: 18px 27px 22px; border-top: 1px solid var(--soft-line); }
+    details.result-more > summary { min-height: 56px; color: var(--cash); font-size: 13px; font-weight: var(--w-title); }
+    .timeline { padding: 18px 27px 22px; border-top: 1px solid var(--line-soft); }
     .timeline-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 15px; }
-    .timeline-head h2 { font-size: 14px; font-weight: 640; }
+    .timeline-head h2 { font-size: 14px; font-weight: var(--w-title); }
     .timeline-head span { color: var(--muted); font-size: 11px; }
     .year-list { display: grid; gap: 14px; }
     .year-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 11px; }
     .year-name { color: var(--muted); font-size: 11px; white-space: nowrap; }
     .year-total { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .year-track { display: flex; min-width: 0; height: 7px; overflow: hidden; border-radius: 3px; background: #e8eeef; }
+    .year-track { display: flex; min-width: 0; height: 7px; overflow: hidden; border-radius: 3px; background: var(--line-soft); }
     .year-track span { height: 100%; }
     .year-cash { background: var(--cash); }
     .year-equity { background: var(--equity); }
-    .year-sign-on { background: #8b9aa1; }
+    .year-sign-on { background: var(--signon); }
     .timeline-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 17px; color: var(--muted); font-size: 11px; }
     .legend { display: inline-flex; align-items: center; gap: 6px; }
     .swatch { width: 8px; height: 8px; flex: 0 0 8px; background: var(--cash); }
     .swatch.equity { background: var(--equity); }
-    .swatch.sign-on { background: #8b9aa1; }
+    .swatch.sign-on { background: var(--signon); }
     .total-four-year { margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; }
 
     .scenario-box { padding: 0 27px 23px; }
     .scenario-head { display: flex; align-items: baseline; justify-content: space-between; gap: 13px; margin-bottom: 11px; }
-    .scenario-head h2 { font-size: 13px; font-weight: 640; }
+    .scenario-head h2 { font-size: 13px; font-weight: var(--w-title); }
     .scenario-head span { color: var(--muted); font-size: 11px; }
     .scenario-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
     .scenario { padding: 9px 10px 9px 0; border-top: 1px solid var(--line); }
@@ -192,7 +239,7 @@
     .scenario strong { display: block; margin-top: 6px; color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
     .empty-result { color: var(--muted); font-size: 12px; line-height: 1.5; }
     .tax-breakdown { margin-top: 14px; }
-    .footer { display: flex; justify-content: space-between; gap: 22px; margin-top: 15px; color: #72858d; font-size: 11px; line-height: 1.6; }
+    .footer { display: flex; justify-content: space-between; gap: 22px; margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
     .footer span:last-child { white-space: nowrap; }
 
     @media (max-width: 920px) {
@@ -819,20 +866,24 @@
         if (!context) return null;
         context.scale(scale, scale);
 
+        // 与 :root 的 token 同源：canvas 读不到 CSS 变量，只能在这里镜像一份
         const palette = {
           page: "#edf2f3",
           paper: "#f8f8f2",
           ink: "#1b303b",
-          muted: "#647985",
-          line: "#d6dfd9",
+          muted: "#5b6f7b",
+          line: "#d8e2e5",
+          softLine: "#e9eff0",
           green: "#103e32",
+          greenLine: "#45675c",
           greenSoft: "#c3d3ca",
+          greenInk: "#f2f3e9",
           lime: "#d8e794",
           cash: "#197e76",
           equity: "#bb842f"
         };
         const text = (value, x, y, { size = 16, weight = 400, color = palette.ink, align = "left" } = {}) => {
-          context.font = `${weight} ${size}px "PingFang SC", "Microsoft YaHei", system-ui, sans-serif`;
+          context.font = `${weight} ${size}px "Plex Sub", "Noto Sub", "PingFang SC", "Microsoft YaHei", sans-serif`;
           context.fillStyle = color;
           context.textAlign = align;
           context.textBaseline = "alphabetic";
@@ -865,7 +916,7 @@
         context.fillStyle = palette.page;
         context.fillRect(0, 0, width, height);
         roundedRect(left, top, cardWidth, cardHeight, 13, palette.paper);
-        context.strokeStyle = "#cbd9d3";
+        context.strokeStyle = palette.line;
         context.lineWidth = 1;
         context.strokeRect(left + 0.5, top + 0.5, cardWidth - 1, cardHeight - 1);
 
@@ -883,9 +934,9 @@
         context.fillStyle = palette.equity;
         context.fillRect(left, top + headerHeight - 2, cardWidth, 2);
 
-        text("薪资计算器", contentLeft, 84, { size: 19, weight: 650, color: "#f2f3e9" });
-        text(read("example-tag"), contentRight, 84, { size: 14, color: "#d5e1da", align: "right" });
-        line(contentLeft, 112, contentRight, 112, "#45675c");
+        text("薪资计算器", contentLeft, 84, { size: 19, weight: 600, color: palette.greenInk });
+        text(read("example-tag"), contentRight, 84, { size: 14, color: palette.greenSoft, align: "right" });
+        line(contentLeft, 112, contentRight, 112, palette.greenLine);
         text("税后月均到手", contentLeft, 160, { size: 16, color: palette.greenSoft });
         text(read("monthly-net"), contentLeft, 238, {
           size: netReady ? 59 : 30,
@@ -896,18 +947,18 @@
           text(`含年终奖年均到手 ${netSecondaryAmount}`, contentLeft, 275, { size: 14, color: palette.greenSoft });
         }
         text(read("result-caption"), contentLeft, 275 + headerExtra, { size: 14, color: palette.greenSoft });
-        line(contentLeft, 304 + headerExtra, contentRight, 304 + headerExtra, "#45675c");
-        line(600, 322 + headerExtra, 600, 374 + headerExtra, "#45675c");
+        line(contentLeft, 304 + headerExtra, contentRight, 304 + headerExtra, palette.greenLine);
+        line(600, 322 + headerExtra, 600, 374 + headerExtra, palette.greenLine);
         text("税后年现金", contentLeft, 337 + headerExtra, { size: 13, color: palette.greenSoft });
-        text(read("steady-net"), contentLeft, 368 + headerExtra, { size: 23, weight: 650, color: "#f2f3e9" });
+        text(read("steady-net"), contentLeft, 368 + headerExtra, { size: 23, weight: 600, color: palette.greenInk });
         text("年化税前总包", 630, 337 + headerExtra, { size: 13, color: palette.greenSoft });
-        text(read("annual-total"), 630, 368 + headerExtra, { size: 23, weight: 650, color: "#f2f3e9" });
+        text(read("annual-total"), 630, 368 + headerExtra, { size: 23, weight: 600, color: palette.greenInk });
 
         text("年度收入组成", contentLeft, headingY, { size: 16, weight: 650 });
         text("现金 · 股权估值", contentRight, headingY, { size: 12, color: palette.muted, align: "right" });
         const cashShare = Math.max(0, Math.min(100, Number.parseFloat(document.querySelector("#cash-fill").style.width) || 0));
         const equityShare = Math.max(0, Math.min(100 - cashShare, Number.parseFloat(document.querySelector("#equity-fill").style.width) || 0));
-        roundedRect(contentLeft, barY, barWidth, 8, 1, "#e2e9e5");
+        roundedRect(contentLeft, barY, barWidth, 8, 1, palette.softLine);
         context.fillStyle = palette.cash;
         context.fillRect(contentLeft, barY, barWidth * cashShare / 100, 8);
         context.fillStyle = palette.equity;
@@ -923,9 +974,9 @@
           const y = rowsStartY + index * rowGap;
           text(label, contentLeft, y, { size: 14, color: palette.muted });
           text(value, contentRight, y, { size: 15, weight: 600, align: "right" });
-          if (index < rows.length - 1) line(contentLeft, y + 16, contentRight, y + 16, "#e9eeea");
+          if (index < rows.length - 1) line(contentLeft, y + 16, contentRight, y + 16, palette.softLine);
         });
-        line(contentLeft, dividerY, contentRight, dividerY, "#cbd9d3");
+        line(contentLeft, dividerY, contentRight, dividerY, palette.line);
         text("首年税后可支配现金", contentLeft, footFirstY, { size: 14, color: palette.muted });
         text(read("first-year-net"), contentRight, footFirstY, { size: 16, weight: 650, color: palette.cash, align: "right" });
         text("首年税前总包，含股权估值", contentLeft, footSecondY, { size: 14, color: palette.muted });
