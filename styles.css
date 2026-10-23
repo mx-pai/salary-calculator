@@ -1,4 +1,4 @@
-@font-face { font-family: "Noto Sub"; src: url(fonts/noto-sans-sc-subset.woff2?v=20261023type1) format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Noto Sub"; src: url(fonts/noto-sans-sc-subset.woff2?v=20261023seo1) format("woff2"); font-weight: 100 900; font-display: swap; }
 :root {
   color-scheme: light;
   --page: #f6f5f0; --paper: #fffefa; --paper-warm: #fcfaf3;
@@ -167,6 +167,7 @@ details[open] > summary .disclosure::before { transform: translateY(2px) rotate(
 .empty-result { color: var(--muted); font-size: 12px; line-height: 1.6; }
 .tax-breakdown { margin-top: 18px; }
 .footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.6; }
+.footer a { flex-shrink: 0; color: var(--cash-dark); text-underline-offset: 3px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* Export is a deliberate, user-triggered paper reveal */
 .export-dialog { width: min(780px, calc(100vw - 32px)); max-height: 92vh; max-height: 92dvh; margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--page); color: var(--ink); box-shadow: 0 24px 90px #272d2133; }

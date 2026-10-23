@@ -7,21 +7,21 @@
   <meta name="description" content="在线薪资计算器，按月薪和年终奖月数，估算税后工资、每月累计个税、全年收入、首年现金和期权归属。支持社保、公积金及个税参数自定义，数据保存在本地浏览器。">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:title" content="薪资计算器 - 税后工资、年终奖与期权估算">
+  <meta property="og:title" content="薪资计算器 - 税后工资、年终奖与累计个税">
   <meta property="og:description" content="计算税后工资、每月累计个税与到手明细、年终奖和期权归属，缴费参数可自定义。">
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://mx-pai.cn/salary-calculator/">
   <meta property="og:url" content="https://mx-pai.cn/salary-calculator/">
-  <title>薪资计算器 - 税后工资、年终奖与期权估算</title>
+  <title>薪资计算器 - 税后工资、年终奖与累计个税</title>
   <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","description":"在线计算税后工资、每月累计个税、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。"}
+    {"@context":"https://schema.org","@type":"WebApplication","name":"薪资计算器","url":"https://mx-pai.cn/salary-calculator/","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"zh-CN","isAccessibleForFree":true,"description":"在线计算税后工资、每月累计个税、月均到手、年终奖、首年收入和期权归属，缴费参数可自定义。","featureList":["税后工资估算","年终奖月数与金额换算","每月累计个税","期权归属估值","工资条图片导出"]}
   </script>
-  <link rel="stylesheet" href="styles.css?v=20261023type1">
+  <link rel="stylesheet" href="styles.css?v=20261023seo1">
 </head>
 <body>
   <main class="shell">
     <header class="masthead">
-      <div class="brand"><h1>薪资计算器</h1><p class="intro">填好薪酬，留下一张自己的工资条</p></div>
+      <div class="brand"><h1>薪资计算器</h1><p class="intro">估算税后工资、年终奖、每月累计个税与期权归属</p></div>
       <div class="mast-actions"><span class="local-note" id="storage-note">输入保存在此浏览器</span><div class="action-buttons"><button class="text-button" id="clear-button" type="button">清空输入</button><button class="text-button" id="reset-button" type="button">载入示例</button></div></div>
     </header>
     <noscript><p class="validation-summary">请启用 JavaScript 后使用薪资计算器</p></noscript>
@@ -209,16 +209,16 @@
     </div></div><p class="section-tip">股权估值单独列示，不计入税后现金</p></div></details>
       </div>
     </div>
-    <footer class="footer"><span>按居民个人年度汇算口径估算，实际月度到手以工资单及个税申报为准</span><span>数据保存在当前浏览器</span></footer>
+    <footer class="footer"><span>按居民个人年度汇算口径估算，实际月度到手以工资单及个税申报为准</span><a href="guide/" data-standalone-href="https://mx-pai.cn/salary-calculator/guide/">计算说明与常见问题</a><span>数据保存在当前浏览器</span></footer>
   </main>
   <dialog class="export-dialog" id="receipt-dialog" aria-labelledby="export-title">
     <div class="export-heading"><div><h2 id="export-title">生成工资条</h2><p>图片在本机生成，点击预览可放大</p></div><button type="button" class="text-button" id="close-export">关闭</button></div>
     <div class="export-canvas" id="export-canvas" aria-busy="false"><img id="export-preview" alt="生成的薪酬估算工资条" role="button" tabindex="0" aria-label="放大工资条预览" aria-pressed="false"><p id="export-loading" role="status">正在生成工资条</p></div>
     <div class="export-footer"><span id="export-status" role="status" aria-live="polite"></span><div><button class="copy-button" id="copy-image" type="button" disabled>复制图片</button><button class="generate-button" id="download-image" type="button" disabled>保存图片</button></div></div>
   </dialog>
-  <script src="calculator.js?v=20261023type1"></script>
-  <script src="report.js?v=20261023type1"></script>
-  <script src="result-image.js?v=20261023type1"></script>
-  <script src="app.js?v=20261023type1"></script>
+  <script src="calculator.js?v=20261023seo1"></script>
+  <script src="report.js?v=20261023seo1"></script>
+  <script src="result-image.js?v=20261023seo1"></script>
+  <script src="app.js?v=20261023seo1"></script>
 </body>
 </html>

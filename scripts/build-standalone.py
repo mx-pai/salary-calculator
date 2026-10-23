@@ -18,6 +18,7 @@ def asset_data(path):
 
 css = re.sub(r'url\(((?:fonts|assets)/[^)]+)\)', lambda match: f'url("{asset_data(match.group(1))}")', css)
 html = re.sub(r'src="(assets/[^"]+)"', lambda match: f'src="{asset_data(match.group(1))}"', html)
+html = re.sub(r'href="[^"]*" data-standalone-href="([^"]+)"', lambda match: f'href="{match.group(1)}"', html)
 html = re.sub(r'<link rel="stylesheet" href="styles\.css(?:\?[^"]*)?">', lambda _: f'<style>\n{css}\n</style>', html)
 
 def embed_script(match):

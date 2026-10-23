@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f0">
+  <title>税后工资怎么算？13 薪、年终奖与累计个税说明 - 薪资计算器</title>
+  <meta name="description" content="了解薪资计算器的填写方式与计算口径：13 薪和年终奖如何区分、税后月均到手与实际每月到账的差异、累计预扣个税，以及期权归属估值。附税务总局和财政部政策来源。">
+  <link rel="canonical" href="https://mx-pai.cn/salary-calculator/guide/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="税后工资、13 薪与年终奖计算说明">
+  <meta property="og:description" content="从一份 offer 开始，读懂年薪、每月到手、累计个税和期权估值。">
+  <meta property="og:url" content="https://mx-pai.cn/salary-calculator/guide/">
+  <link rel="stylesheet" href="../styles.css?v=20261023seo1">
+  <link rel="stylesheet" href="guide.css?v=20261023seo1">
+</head>
+<body>
+  <main class="guide-shell">
+    <header class="guide-header"><a href="../">薪资计算器</a><a href="https://github.com/mx-pai/salary-calculator">查看开源代码</a></header>
+    <article>
+      <h1>税后工资与年终奖<br>计算说明</h1>
+      <p class="guide-lead">月薪、13 薪、年终奖和期权，分别影响现金、税额与归属估值。这份说明对应计算器的实际填写方式，也说明估算结果的适用范围</p>
+      <nav class="guide-contents" aria-label="本页内容"><a href="#annual">年薪与年终奖</a><a href="#net">税后到手</a><a href="#monthly">每月累计个税</a><a href="#equity">期权与股票</a><a href="#sources">口径与来源</a></nav>
+
+      <section id="annual">
+        <h2>13 薪和年终奖，应该怎么填？</h2>
+        <p>在这个计算器里，「固定发薪月数」包含 offer 约定的固定多薪。如果是 30,000 元 × 13 薪，就填写月薪 30,000 元、固定发薪 13 个月；额外发放的年终奖再填到奖金栏</p>
+        <p>年终奖可以按月数或金额填写。按月数填写时，奖金金额会随月薪变化；按金额填写时，保留你输入的奖金总额。计算器的填写分类用于拆分收入，实际工资和奖金的计税分类以单位发放及申报口径为准</p>
+        <div class="guide-example"><p>例如月薪 30,000 元、固定 12 薪、额外年终奖 3 个月</p><strong>30,000 × 12 + 30,000 × 3 = 450,000 元</strong><p>这是全年税前现金，尚未扣除个人缴费和个税，也未加入补贴与股权估值</p></div>
+        <p>报价中已经包含的同一笔收入填写一次即可。固定 13 薪又有额外 3 个月奖金时，分别填写 13 和 3；固定 13 薪且没有额外奖金时，奖金填 0</p>
+      </section>
+
+      <section id="net">
+        <h2>税后月均到手，和每月到账有什么差别？</h2>
+        <p>页面的「税后月均到手」将固定工资和现金补贴按全年税后金额摊到每月。年终奖计入旁边的「含年终奖年均到手」，股权估值单独列示。月均金额适合比较不同薪酬方案，具体月份的现金流可以切换到「每月到手」查看</p>
+        <p>计算税后金额需要个人社保、公积金和专项附加扣除等信息。你可以按工资单填写缴费基数与个人比例，也可以主动勾选常见参数：空白基数按月薪、个人社保按 10.5%、公积金按 7% 估算。这组比例是工具的估算假设，各地、各单位的实际缴费规则和基数上下限需要自行核对</p>
+        <p>专项附加扣除按全年金额填写。未设置缴费参数时，页面先展示税前收入；填写参数后才估算到手金额。补贴、试用期折扣、入职月份和签字费可以在对应的展开项里调整</p>
+      </section>
+
+      <section id="monthly">
+        <h2>工资相同，为什么每月个税会变化？</h2>
+        <p>居民个人工资薪金采用累计预扣法：先累计本年到当前月的收入和扣除，计算累计应扣税额，再减去此前已经扣过的税款，得到本月预扣额。累计应纳税所得额增加并进入不同税率区间时，相同月薪对应的到手金额也可能变化</p>
+        <p>在「每月到手」中点击月份，可查看本月个税、截至该月的累计个税和到手金额。「这笔税怎么算」列出累计收入、扣除、税率和此前已扣税额，「全年 12 个月明细」用于对照整年的变化</p>
+        <p>月度模型按 1 月起全年在职估算，年度补贴与专项附加扣除均摊到 12 个月，奖金与超过 12 薪的固定工资在你选定的月份发放。首年试用期和签字费计入首年年度结果，月度表暂不纳入这两项调整，也未合并其他雇主收入</p>
+        <p>全年一次性奖金可以选择符合条件的单独计税或并入综合所得，自动比较会展示模型中税额较低的结果。现行政策执行至 2027 年 12 月 31 日，适用条件请查看<a href="https://www.mof.gov.cn/jrttts/202308/t20230828_3904461.htm" target="_blank" rel="noreferrer">财政部、税务总局公告</a></p>
+      </section>
+
+      <section id="equity">
+        <h2>期权归属估值能计入实际到手吗？</h2>
+        <p>期权部分按份数、行权价、估值与归属时间估算，默认展示四年的归属变化。每份估值高于行权价的部分用于计算期权内在价值，再按归属比例计入相应年份</p>
+        <p>这部分是情景估值，变现取决于公司交易安排和个人条款。工具未计入流动性折价、离职失效或股权相关税费，股权估值计入税前总包，实际到手栏目展示现金</p>
+      </section>
+
+      <section id="sources">
+        <h2>计算口径与政策来源</h2>
+        <p>本工具面向中国大陆居民个人工资薪金场景，用于薪酬方案估算。实际预扣、年度汇算和工资到账金额以工资单及个税申报为准</p>
+        <ul class="guide-sources"><li><a href="https://www.chinatax.gov.cn/chinatax/n810341/n810765/n3359382/201812/c4182700/content.html" target="_blank" rel="noreferrer">国家税务总局：个人所得税扣缴申报管理办法（试行）</a></li><li><a href="https://www.mof.gov.cn/jrttts/202308/t20230828_3904461.htm" target="_blank" rel="noreferrer">财政部、税务总局：延续实施全年一次性奖金个人所得税政策</a></li><li><a href="https://github.com/mx-pai/salary-calculator">开源实现与问题反馈</a></li></ul>
+        <p>计算与工资条图片均在浏览器本地完成，输入保存在当前浏览器。本文更新于 <time datetime="2026-10-23">2026 年 10 月 23 日</time></p>
+      </section>
+    </article>
+    <footer class="guide-footer"><a class="generate-button" href="../">打开薪资计算器</a><a href="https://mx-pai.cn/">返回博客</a></footer>
+  </main>
+</body>
+</html>

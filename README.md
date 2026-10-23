@@ -4,6 +4,8 @@
 
 在线使用：[薪资计算器](https://mx-pai.cn/salary-calculator/)
 
+[计算说明与常见问题](https://mx-pai.cn/salary-calculator/guide/) · [搜索收录配置](SEO.md)
+
 ## 本地使用
 
 运行 `python3 -m http.server 8000` 后访问 `http://localhost:8000`，也可使用下方命令生成包含图片与字体的离线单文件

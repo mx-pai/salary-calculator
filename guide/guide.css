@@ -1,0 +1,18 @@
+.guide-shell { width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 26px 0 36px; }
+.guide-shell a { color: var(--cash-dark); text-underline-offset: 4px; }
+.guide-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 18px; margin-bottom: 32px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.guide-header a:first-child { color: var(--ink); font-size: 15px; font-weight: 500; text-decoration: none; }
+.guide-shell h1 { font-size: clamp(27px, 5vw, 36px); font-weight: 500; line-height: 1.5; }
+.guide-lead { margin-top: 16px; color: var(--ink-soft); font-size: 15px; line-height: 1.9; }
+.guide-contents { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 24px; font-size: 13px; }
+.guide-shell section { margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--line); scroll-margin-top: 20px; }
+.guide-shell h2 { margin-bottom: 14px; font-size: 20px; font-weight: 500; line-height: 1.5; }
+.guide-shell section p { margin-top: 12px; font-size: 15px; line-height: 1.95; color: var(--ink-soft); }
+.guide-example { margin: 22px 0; padding-left: 18px; border-left: 3px solid #b4c0a8; }
+.guide-example strong { display: block; margin: 12px 0; font-size: clamp(16px, 3.5vw, 22px); font-weight: 500; font-variant-numeric: tabular-nums; }
+.guide-shell .guide-example p { font-size: 13px; }
+.guide-sources { margin: 16px 0; padding-left: 20px; font-size: 14px; line-height: 1.9; }
+.guide-sources li + li { margin-top: 8px; }
+.guide-footer { display: flex; align-items: center; gap: 24px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 13px; }
+.guide-footer .generate-button { color: var(--paper); text-decoration: none; }
+@media (max-width: 560px) { .guide-shell { width: calc(100% - 32px); padding-top: 20px; }.guide-header { margin-bottom: 24px; }.guide-shell section p { font-size: 14px; }.guide-shell h2 { font-size: 19px; } }
